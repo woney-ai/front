@@ -24,11 +24,21 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 /** Resend allows 2 requests/second on the free tier. Stay under it. */
 const POLL_INTERVAL_MS = 550
 
+/** A batch of 100 has no room for a call that never returns. */
+const POLL_TIMEOUT_MS = 10_000
+
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 
 /**
  * Once a message reaches one of these, asking again can only return the same
  * answer, so the row stops being polled.
+ */
+/**
+ * Must match `waitlist_delivery_is_terminal()` in waitlist-confirmation.sql.
+ * `expired` belongs here — this function writes it on a 404 — and leaving it
+ * out did not strand any row, because the SQL side is what gates re-claiming.
+ * It corrupted the counters instead, reporting a finished row as still pending
+ * in the one number used to judge whether the sweep is healthy.
  */
 const TERMINAL = new Set([
   'delivered',
@@ -36,6 +46,8 @@ const TERMINAL = new Set([
   'complained',
   'canceled',
   'failed',
+  'expired',
+  'invalid-domain',
 ])
 
 function required(name: string): string {
@@ -63,6 +75,7 @@ type PendingRow = { id: string; provider_message_id: string }
 async function lastEvent(apiKey: string, messageId: string): Promise<string> {
   const response = await fetch(`${RESEND_ENDPOINT}/${messageId}`, {
     headers: { Authorization: `Bearer ${apiKey}` },
+    signal: AbortSignal.timeout(POLL_TIMEOUT_MS),
   })
 
   // Resend prunes old messages. A 404 is an answer, not an error: the message
@@ -90,7 +103,17 @@ async function lastEvent(apiKey: string, messageId: string): Promise<string> {
 
   const body = (await response.json()) as { last_event?: string }
 
-  return body.last_event ?? 'unknown'
+  // A missing last_event is not a status, and writing one invented here is
+  // worse than writing nothing: `unknown` is not terminal, so the row would be
+  // re-polled to no purpose until give_up_after and then dropped in silence —
+  // while the health alarm, which only looks for a null status, stayed quiet
+  // the whole time. Throwing keeps delivery_status null, which is both true
+  // and visible.
+  if (!body.last_event) {
+    throw new Error('Resend returned no last_event')
+  }
+
+  return body.last_event
 }
 
 Deno.serve(async () => {

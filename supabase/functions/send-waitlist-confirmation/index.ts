@@ -28,6 +28,11 @@ import { confirmationEmail } from './email.ts'
 /** Resend allows 2 requests/second on the free tier. Stay under it. */
 const SEND_INTERVAL_MS = 550
 
+/** Every outbound call is bounded. Unbounded ones do not fail, they hang, and
+ * a hang inside the loop spends the whole batch's wall clock on one row. */
+const DNS_TIMEOUT_MS = 3_000
+const SEND_TIMEOUT_MS = 15_000
+
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 
 function required(name: string): string {
@@ -69,13 +74,27 @@ type PendingRow = { id: string; email: string }
  * message is sent. Refusing a real person because DNS hiccuped is a far worse
  * failure than one avoidable bounce.
  */
+/** The part after the LAST `@`. Splitting on the first one reads the wrong
+ * host for `victim@a.com@attacker.net`: it would check `a.com` while the
+ * message went somewhere else entirely. The insert policy now rejects a second
+ * `@` outright, so this is the second of two locks on the same door. */
+function domainOf(email: string): string {
+  const at = email.lastIndexOf('@')
+  return at === -1 ? '' : email.slice(at + 1)
+}
+
 async function domainAcceptsMail(
   domain: string,
 ): Promise<'yes' | 'no' | 'unknown'> {
   if (!domain) return 'no'
 
+  // Bounded, because this now runs per row inside the send loop and a resolver
+  // that hangs would burn the function's wall clock on a full batch — killing
+  // it mid-batch, which is the failure the per-row marking exists to contain.
+  const bounded = () => ({ signal: AbortSignal.timeout(DNS_TIMEOUT_MS) })
+
   try {
-    const mx = await Deno.resolveDns(domain, 'MX')
+    const mx = await Deno.resolveDns(domain, 'MX', bounded())
     if (mx.length > 0) return 'yes'
   } catch (cause) {
     if (!(cause instanceof Deno.errors.NotFound)) {
@@ -87,7 +106,7 @@ async function domainAcceptsMail(
   // No MX is not the end of it. A host with only an A record still accepts
   // mail under the implicit-MX rule, which is rare but entirely legal.
   try {
-    const a = await Deno.resolveDns(domain, 'A')
+    const a = await Deno.resolveDns(domain, 'A', bounded())
     return a.length > 0 ? 'yes' : 'no'
   } catch (cause) {
     if (cause instanceof Deno.errors.NotFound) return 'no'
@@ -111,6 +130,7 @@ async function send(
   from: string,
   replyTo: string,
   to: string,
+  rowId: string,
 ): Promise<string | null> {
   const { subject, html, text } = confirmationEmail()
 
@@ -128,6 +148,7 @@ async function send(
       html,
       text,
     }),
+    signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
   })
 
   if (!response.ok) {
@@ -143,7 +164,9 @@ async function send(
     const body = (await response.json()) as { id?: string }
     return body.id ?? null
   } catch (cause) {
-    console.error(`could not read the message id for ${to}`, cause)
+    // The row id, not the address. These logs are centralized and an email is
+    // personal data that has no business being in them.
+    console.error(`could not read the message id for ${rowId}`, cause)
     return null
   }
 }
@@ -186,7 +209,7 @@ Deno.serve(async () => {
     // Cheaper than a send and cheaper than a bounce. `invalid-domain` is a
     // terminal delivery status, so the row leaves the queue without ever
     // claiming we mailed it — confirmation_sent_at stays null, which is true.
-    if ((await domainAcceptsMail(row.email.split('@')[1] ?? '')) === 'no') {
+    if ((await domainAcceptsMail(domainOf(row.email))) === 'no') {
       const { error: rejectError } = await supabase
         .from('waitlist')
         .update({ delivery_status: 'invalid-domain' })
@@ -203,7 +226,7 @@ Deno.serve(async () => {
     let messageId: string | null
 
     try {
-      messageId = await send(apiKey, from, replyTo, row.email)
+      messageId = await send(apiKey, from, replyTo, row.email, row.id)
     } catch (cause) {
       // The row keeps confirmation_sent_at null, so the next run retries it
       // once the lease expires — up to max_attempts, then it is abandoned.

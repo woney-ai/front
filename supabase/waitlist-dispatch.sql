@@ -100,9 +100,13 @@ begin
   -- fifteen-minute sweep, which is the one that spends most of its life
   -- waking an edge function up to be told the queue is empty.
   --
-  -- The 5 mirrors `max_attempts` in claim_waitlist_confirmations(). Raise it
-  -- there and this guard silently stops dispatching for the rows between the
-  -- two values, which is the failure this comment exists to prevent.
+  -- The 5 mirrors `max_attempts` in claim_waitlist_confirmations(), and it is
+  -- written in three places, not two: here, and twice more in
+  -- check_waitlist_mailer_health() below — the stalled count and the abandoned
+  -- count. Raise max_attempts and miss any one of them and the mismatch is
+  -- silent: this guard stops dispatching rows the claim would still hand out,
+  -- and the health check reports rows as abandoned while they are still being
+  -- retried.
   --
   -- This does narrow observability: an empty queue no longer produces a
   -- dispatch to inspect, so a broken function goes unnoticed until the next
@@ -218,6 +222,7 @@ as $$
 declare
   v_failed     integer;
   v_stalled    integer;
+  v_abandoned  integer;
   v_unresolved integer;
   v_bounced    integer;
   v_resolved   integer;
@@ -262,6 +267,29 @@ begin
       v_stalled;
   end if;
 
+  -- The warning above has a hole exactly where it matters most. It counts rows
+  -- with attempts under the limit, so during a total outage it fires for half
+  -- an hour and then falls silent — every affected row crosses five attempts
+  -- and drops out of the count. Silence would then mean "recovered" and
+  -- "nobody is getting mail" at the same time.
+  --
+  -- Abandonment is the louder signal, not the quieter one. A revoked Resend
+  -- key or a suspended account produces exactly this and produces it forever,
+  -- and no other check sees it: the send loop catches each failure per row and
+  -- still answers 200, so the dispatch-level check finds nothing wrong either.
+  select count(*)
+  into v_abandoned
+  from public.waitlist
+  where confirmation_sent_at is null
+    and not public.waitlist_delivery_is_terminal(delivery_status)
+    and confirmation_attempts >= 5;
+
+  if v_abandoned > 0 then
+    raise warning
+      'waitlist mailer: % signup(s) abandoned after 5 failed attempts and will never be retried',
+      v_abandoned;
+  end if;
+
   -- Bounces are the one failure the send path cannot see: Resend accepts the
   -- message, the receiving server rejects it later, and nothing says so. The
   -- reconciler in waitlist-delivery.sql writes the answer here; this reads it.
@@ -279,10 +307,15 @@ begin
   -- wrong is worse than no alarm, because it teaches you to ignore the one
   -- that matters. Change the schedule in waitlist-delivery.sql and change
   -- this with it.
+  -- Note what is NOT required here: a provider message id. A send whose
+  -- response body could not be parsed stores a null id, and such a row is
+  -- invisible to the reconciler, which only claims rows that have one. Asking
+  -- for an id would have made this alarm blind to precisely the rows nothing
+  -- else can see.
   select count(*)
   into v_unresolved
   from public.waitlist
-  where provider_message_id is not null
+  where confirmation_sent_at is not null
     and delivery_status is null
     and confirmation_sent_at < now() - interval '12 hours';
 

@@ -37,4 +37,9 @@ create policy "anon can join waitlist"
     -- browser's own validation forbids these, but the browser is not the gate:
     -- anything can post here with the key from the bundle.
     and email !~ '[[:space:],;<>"\\]'
+    -- Exactly one @. Two of them make the address ambiguous to every reader
+    -- that splits on it — including the mailer's own domain check, which took
+    -- the second segment and so would have looked up `a.com` for
+    -- `victim@a.com@attacker.net` while the message went elsewhere.
+    and (char_length(email) - char_length(replace(email, '@', ''))) = 1
   );

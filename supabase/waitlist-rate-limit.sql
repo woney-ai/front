@@ -25,6 +25,13 @@ create table if not exists public.waitlist_signup_attempt (
   created_at timestamptz not null default now()
 );
 
+-- The raw header, kept so the parsing above can be checked against reality
+-- rather than trusted. Proxy chains differ per provider and the shape is not
+-- worth guessing: read this column after a real signup and confirm the
+-- fingerprint matches the address you expect.
+alter table public.waitlist_signup_attempt
+  add column if not exists forwarded_for text;
+
 create index if not exists waitlist_signup_attempt_lookup
   on public.waitlist_signup_attempt (fingerprint, created_at desc);
 
@@ -40,25 +47,41 @@ security definer
 set search_path = public
 as $$
 declare
+  v_headers     json;
+  v_forwarded   text;
   v_fingerprint text;
   v_recent      integer;
 begin
-  -- PostgREST publishes the request headers as a GUC. Behind Supabase's proxy
-  -- the caller's address is the FIRST entry of x-forwarded-for; everything
-  -- after it is our own infrastructure and proves nothing.
-  v_fingerprint := nullif(
-    btrim(
-      split_part(
-        coalesce(
-          current_setting('request.headers', true)::json ->> 'x-forwarded-for',
-          ''
-        ),
-        ',',
-        1
-      )
-    ),
-    ''
+  -- PostgREST publishes the request headers as a GUC.
+  --
+  -- Which part of x-forwarded-for identifies the caller is the whole question,
+  -- and the intuitive answer is wrong. Proxies APPEND the peer they saw, so
+  -- the header reads `<what the client claimed>, <what hop 1 saw>, ...`. The
+  -- first element is therefore supplied by the client and worth nothing: a
+  -- script rotating it gets a fresh budget on every request, and the throttle
+  -- is decoration.
+  --
+  -- So prefer the headers a trusted edge writes and a client cannot forge —
+  -- Cloudflare strips and replaces cf-connecting-ip on the way in — and fall
+  -- back to the LAST element, the one the closest trusted hop appended.
+  v_headers := current_setting('request.headers', true)::json;
+
+  v_forwarded := v_headers ->> 'x-forwarded-for';
+
+  v_fingerprint := coalesce(
+    v_headers ->> 'cf-connecting-ip',
+    v_headers ->> 'x-real-ip',
+    (
+      select btrim(t.part)
+      from unnest(string_to_array(coalesce(v_forwarded, ''), ','))
+        with ordinality as t(part, ord)
+      where btrim(t.part) <> ''
+      order by t.ord desc
+      limit 1
+    )
   );
+
+  v_fingerprint := nullif(btrim(coalesce(v_fingerprint, '')), '');
 
   -- No header means this did not arrive over HTTP: a dashboard query, psql, a
   -- migration. Those callers are already trusted, and throttling them would
@@ -81,8 +104,8 @@ begin
       using errcode = 'PT429';
   end if;
 
-  insert into public.waitlist_signup_attempt (fingerprint)
-  values (v_fingerprint);
+  insert into public.waitlist_signup_attempt (fingerprint, forwarded_for)
+  values (v_fingerprint, v_forwarded);
 
   return new;
 end;

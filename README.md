@@ -81,6 +81,7 @@ Setup, in order:
    | `WAITLIST_REPLY_TO` | `hello@woney.ai` (optional, this is the default) |
    | `WAITLIST_BATCH_SIZE` | optional, default `20` |
    | `WAITLIST_DAILY_CAP` | optional, default `95` |
+   | `WAITLIST_RECONCILE_BATCH_SIZE` | optional, default `100` |
 
    `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
 5. Run [`supabase/waitlist-dispatch.sql`](./supabase/waitlist-dispatch.sql)
@@ -163,7 +164,10 @@ retrieving a message requires **Full access**, while sending needs only
 narrow key is the one worth keeping there. A Sending-only key in
 `RESEND_READ_API_KEY` fails in the quietest possible way — mail goes out
 normally, every poll 401s, and `delivery_status` stays null forever. The health
-check watches for exactly that and warns after an hour.
+check watches for exactly that and warns once a sent message has gone twelve
+hours without a status. Expect to hear about it in half a day, not in an hour:
+the reconciler runs every six, so anything tighter would fire during normal
+operation.
 
 This is also the query that says what the list is worth:
 
