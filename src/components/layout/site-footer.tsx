@@ -8,10 +8,10 @@ export function SiteFooter() {
 
         <div className="flex items-center gap-7">
           <a
-            href="mailto:hello@woney.com"
+            href="mailto:hello@woney.ai"
             className="rule-mono text-bone-faint transition-colors hover:text-bone"
           >
-            hello@woney.com
+            hello@woney.ai
           </a>
           <span className="rule-mono text-bone-faint">
             © {new Date().getFullYear()} Woney
