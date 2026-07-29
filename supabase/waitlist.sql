@@ -16,9 +16,10 @@ create unique index if not exists waitlist_email_key
 
 alter table public.waitlist enable row level security;
 
--- The browser uses the anon key, so it may only INSERT.
--- No select/update/delete policy exists, which means the list is not
--- readable from the client. Read it from the dashboard or a service role.
+-- The browser uses a publishable key, which resolves to the `anon` role,
+-- so it may only INSERT. No select/update/delete policy exists, which means
+-- the list is not readable from the client. Read it from the dashboard or
+-- with a secret key server-side.
 drop policy if exists "anon can join waitlist" on public.waitlist;
 
 create policy "anon can join waitlist"

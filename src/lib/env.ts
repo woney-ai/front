@@ -1,4 +1,7 @@
-const requiredEnv = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'] as const
+const requiredEnv = [
+  'VITE_SUPABASE_URL',
+  'VITE_SUPABASE_PUBLISHABLE_KEY',
+] as const
 
 type RequiredEnvKey = (typeof requiredEnv)[number]
 
@@ -18,5 +21,5 @@ function readEnv(key: RequiredEnvKey): () => string {
 
 export const env = {
   supabaseUrl: readEnv('VITE_SUPABASE_URL'),
-  supabaseAnonKey: readEnv('VITE_SUPABASE_ANON_KEY'),
+  supabasePublishableKey: readEnv('VITE_SUPABASE_PUBLISHABLE_KEY'),
 }

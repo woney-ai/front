@@ -10,15 +10,16 @@ let client: SupabaseClient | null = null
  * render fast, and a missing env var breaks the form submit instead of
  * blanking the whole landing page.
  *
- * The anon key is public. What protects the data is row level security:
- * this client can only INSERT into `waitlist`, never read it.
+ * The publishable key is meant to be public and ships in the bundle. What
+ * protects the data is row level security: the key resolves to Postgres'
+ * `anon` role, which may only INSERT into `waitlist`, never read it.
  */
 export async function getSupabase(): Promise<SupabaseClient> {
   if (client) return client
 
   const { createClient } = await import('@supabase/supabase-js')
 
-  client ??= createClient(env.supabaseUrl(), env.supabaseAnonKey(), {
+  client ??= createClient(env.supabaseUrl(), env.supabasePublishableKey(), {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

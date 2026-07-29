@@ -19,17 +19,34 @@ bun dev
 
 Create a project, then run [`supabase/waitlist.sql`](./supabase/waitlist.sql)
 in the SQL editor. It creates the `waitlist` table and a row level security
-policy that lets the anonymous browser client **insert only** — the list is
-never readable from the frontend.
+policy that lets the browser client **insert only** — the list is never
+readable from the frontend.
 
-Copy the project URL and anon key from *Project settings → API* into
-`.env.local`.
+Copy the project URL and the **publishable key** (`sb_publishable_…`) from
+*Project Settings → API Keys* into `.env.local`.
+
+### About the keys
+
+Supabase replaced the legacy JWT keys: `sb_publishable_…` supersedes `anon`,
+and `sb_secret_…` supersedes `service_role`. The legacy pair still works but
+is deprecated through the end of 2026, so new projects should use the new
+format. Either value works in `createClient` if you are on an older project.
+
+The publishable key is public by design and ships in the bundle. It resolves
+to Postgres' `anon` role, so the RLS policy in `waitlist.sql` is what actually
+protects the data — which is why that policy grants `insert` and nothing else.
+
+A secret key must never appear in a `VITE_` variable. Anything prefixed with
+`VITE_` is inlined into the client bundle at build time.
 
 ## Deploy (Vercel)
 
 Import the repo. `vercel.json` already sets the Bun install/build commands.
-Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as environment variables
-for every environment, then deploy.
+Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` as environment
+variables for Production, Preview **and** Development, then deploy.
+
+Vite inlines env vars at build time, so changing them requires a redeploy —
+editing them in the dashboard does not update an existing deployment.
 
 ## Structure
 
@@ -51,8 +68,8 @@ out of the initial bundle. It only loads when someone submits the form.
 
 ## Reading signups
 
-The anon key cannot read the table. Use the Supabase dashboard, or query with
-the service role key from a trusted environment:
+The publishable key cannot read the table. Use the Supabase dashboard, or
+query with a secret key from a trusted server-side environment:
 
 ```sql
 select email, source, referrer, created_at
