@@ -30,4 +30,11 @@ create policy "anon can join waitlist"
     email is not null
     and char_length(email) between 3 and 254
     and email like '%_@_%.__%'
+    -- The shape check above accepts characters that stop being harmless once
+    -- this value is handed to a mail provider. `_` and `%` match anything,
+    -- including a comma, so `victim@a.com,attacker@b.com` passes it — and the
+    -- mailer puts that string straight into Resend's recipient field. The
+    -- browser's own validation forbids these, but the browser is not the gate:
+    -- anything can post here with the key from the bundle.
+    and email !~ '[[:space:],;<>"\\]'
   );
