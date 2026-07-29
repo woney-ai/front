@@ -38,6 +38,27 @@ grant insert (email, source, referrer) on public.waitlist to anon;
 --
 -- daily_cap is measured against a rolling 24 hours rather than a calendar
 -- day, which is the conservative reading of a provider's "per day" limit.
+-- A delivery status nothing will change by asking again.
+--
+-- Defined here because this is the first file that needs it, though the values
+-- come from elsewhere: `delivered` and friends are written by the reconciler
+-- in waitlist-delivery.sql, and `invalid-domain` by the mailer when a domain
+-- turns out to have no mail exchanger.
+--
+-- Both queues read it, which is the point. A terminal row is finished, and
+-- neither sending nor polling should ever pick it up again.
+create or replace function public.waitlist_delivery_is_terminal(status text)
+returns boolean
+language sql
+immutable
+as $$
+  select status is not null
+     and status in (
+       'delivered', 'bounced', 'complained', 'canceled', 'failed', 'expired',
+       'invalid-domain'
+     );
+$$;
+
 create or replace function public.claim_waitlist_confirmations(
   batch_size integer default 20,
   daily_cap integer default 95,
@@ -116,6 +137,7 @@ begin
     select w.id
     from public.waitlist w
     where w.confirmation_sent_at is null
+      and not public.waitlist_delivery_is_terminal(w.delivery_status)
       and w.confirmation_attempts < max_attempts
       and (
         w.confirmation_last_attempt_at is null

@@ -112,6 +112,7 @@ begin
     select 1
     from public.waitlist
     where confirmation_sent_at is null
+      and not public.waitlist_delivery_is_terminal(delivery_status)
       and confirmation_attempts < 5
   ) then
     return;
@@ -250,6 +251,7 @@ begin
   into v_stalled
   from public.waitlist
   where confirmation_sent_at is null
+    and not public.waitlist_delivery_is_terminal(delivery_status)
     and confirmation_attempts < 5
     and created_at < now() - interval '45 minutes';
 

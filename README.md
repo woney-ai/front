@@ -105,6 +105,26 @@ under *Logs → Postgres*. Without it a broken deploy is indistinguishable from
 an empty queue — which is exactly how this pipeline once sat dead with a real
 signup waiting in it.
 
+### Validating an address
+
+Three different problems wear the same name, and only the first is validation.
+
+The form checks **syntax** with Zod's HTML5 pattern, the same one the browser
+enforces on `type="email"`, so the field and the schema never disagree.
+
+The mailer checks whether the **domain can receive mail at all** — an MX
+lookup, falling back to an A record for hosts that accept mail under the
+implicit-MX rule. No mail exchanger means the address cannot work, so the row
+is marked `invalid-domain` and never sent. That is the one bounce worth
+preventing rather than reporting. The check is three-valued: only an
+authoritative not-found rejects an address, and a resolver timeout sends
+anyway, because refusing a real person over a DNS hiccup is the worse failure.
+
+Whether the **mailbox exists** is not answerable from here, by any library.
+`unclaimed.mailbox@gmail.com` passes both checks and still hard bounces — the
+domain is real, the address belongs to nobody. Only delivery answers that,
+which is what the next section is for.
+
 ### Knowing what actually arrived
 
 `confirmation_sent_at` means Resend accepted the message. Whether a human

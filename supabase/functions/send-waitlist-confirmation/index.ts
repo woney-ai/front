@@ -53,6 +53,51 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 type PendingRow = { id: string; email: string }
 
 /**
+ * Whether the domain can receive mail at all.
+ *
+ * This is the one bounce worth preventing rather than reporting: a domain with
+ * no mail exchanger is not a maybe, and sending to it spends a message and
+ * earns a hard bounce for an answer DNS would have given for free.
+ *
+ * It says nothing about the mailbox. `unclaimed.mailbox@gmail.com` passes this
+ * and still hard bounces — gmail.com is real, that address is not. Only
+ * delivery answers that, which is what the reconciler is for.
+ *
+ * Three-valued deliberately, because "cannot tell" is not "invalid". Only an
+ * authoritative not-found rejects an address; a resolver timeout, a missing
+ * permission or an unimplemented API all fall through to `unknown` and the
+ * message is sent. Refusing a real person because DNS hiccuped is a far worse
+ * failure than one avoidable bounce.
+ */
+async function domainAcceptsMail(
+  domain: string,
+): Promise<'yes' | 'no' | 'unknown'> {
+  if (!domain) return 'no'
+
+  try {
+    const mx = await Deno.resolveDns(domain, 'MX')
+    if (mx.length > 0) return 'yes'
+  } catch (cause) {
+    if (!(cause instanceof Deno.errors.NotFound)) {
+      console.error(`MX lookup inconclusive for ${domain}`, cause)
+      return 'unknown'
+    }
+  }
+
+  // No MX is not the end of it. A host with only an A record still accepts
+  // mail under the implicit-MX rule, which is rare but entirely legal.
+  try {
+    const a = await Deno.resolveDns(domain, 'A')
+    return a.length > 0 ? 'yes' : 'no'
+  } catch (cause) {
+    if (cause instanceof Deno.errors.NotFound) return 'no'
+
+    console.error(`A lookup inconclusive for ${domain}`, cause)
+    return 'unknown'
+  }
+}
+
+/**
  * Sends one confirmation and returns the provider's message id.
  *
  * That id is the whole reason this returns anything. A 2xx here means Resend
@@ -133,9 +178,27 @@ Deno.serve(async () => {
   let sent = 0
   let failed = 0
   let unmarked = 0
+  let undeliverable = 0
 
   for (const [index, row] of pending.entries()) {
     if (index > 0) await sleep(SEND_INTERVAL_MS)
+
+    // Cheaper than a send and cheaper than a bounce. `invalid-domain` is a
+    // terminal delivery status, so the row leaves the queue without ever
+    // claiming we mailed it — confirmation_sent_at stays null, which is true.
+    if ((await domainAcceptsMail(row.email.split('@')[1] ?? '')) === 'no') {
+      const { error: rejectError } = await supabase
+        .from('waitlist')
+        .update({ delivery_status: 'invalid-domain' })
+        .eq('id', row.id)
+
+      if (rejectError) {
+        console.error(`could not mark ${row.id} undeliverable`, rejectError)
+      }
+
+      undeliverable += 1
+      continue
+    }
 
     let messageId: string | null
 
@@ -174,5 +237,11 @@ Deno.serve(async () => {
     sent += 1
   }
 
-  return Response.json({ claimed: pending.length, sent, failed, unmarked })
+  return Response.json({
+    claimed: pending.length,
+    sent,
+    failed,
+    unmarked,
+    undeliverable,
+  })
 })

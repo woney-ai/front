@@ -28,19 +28,11 @@ create index if not exists waitlist_delivery_pending
   on public.waitlist (delivery_checked_at nulls first)
   where provider_message_id is not null;
 
--- Once a message reaches one of these the answer cannot change, so the row
--- stops being polled. `expired` is ours: Resend prunes old messages and
--- answers 404, which is an answer, not a failure to retry forever.
-create or replace function public.waitlist_delivery_is_terminal(status text)
-returns boolean
-language sql
-immutable
-as $$
-  select status is not null
-     and status in (
-       'delivered', 'bounced', 'complained', 'canceled', 'failed', 'expired'
-     );
-$$;
+-- `waitlist_delivery_is_terminal()` lives in waitlist-confirmation.sql, which
+-- runs first and needs it too. Most of the values it recognises are written
+-- here: whatever Resend reports as `last_event`, plus `expired` for a message
+-- Resend has pruned and answers 404 for — an answer, not a reason to keep
+-- asking forever.
 
 create or replace function public.claim_waitlist_deliveries(
   batch_size integer default 40,
