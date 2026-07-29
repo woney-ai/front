@@ -32,6 +32,16 @@ export function WaitlistForm({ className }: { className?: string }) {
   async function onSubmit(values: WaitlistInput) {
     try {
       const result = await joinWaitlist(values)
+
+      // Not a failure to hide behind "try again" — the address is fine and the
+      // wait is finite, so say both.
+      if (result.status === 'rate-limited') {
+        form.setError('email', {
+          message: 'Too many attempts from your network. Try again in an hour.',
+        })
+        return
+      }
+
       setState(result.status)
       form.reset()
     } catch {

@@ -101,6 +101,29 @@ under *Logs → Postgres*. Without it a broken deploy is indistinguishable from
 an empty queue — which is exactly how this pipeline once sat dead with a real
 signup waiting in it.
 
+### Abuse
+
+The insert policy is open to `anon` by necessity — the form posts straight to
+PostgREST with a key that ships in the bundle. Once every insert costs a real
+send, a scripted flood stops being a nuisance and starts costing the day's
+budget and the sending domain's reputation.
+
+Run [`supabase/waitlist-rate-limit.sql`](./supabase/waitlist-rate-limit.sql)
+for the first layer: five signups per address per hour, enforced by a `before
+insert` trigger reading `x-forwarded-for`. Rejections come back as HTTP 429,
+which the form reports as a wait rather than a failure.
+
+The second layer sits in `claim_waitlist_confirmations()`. Past 60 signups in
+an hour it stops handing out work and logs a warning, so an implausible hour
+never reaches the mail provider. Signups are still captured — the same trade
+as a failed dispatch, since one we hold is recoverable and one we refuse is
+gone. It defers rather than resolves: the queue is still there afterwards, and
+the warning is what buys you time to delete the junk before it is mailed.
+
+Neither layer stops an attacker rotating addresses. That needs a proof of work
+in the browser — Turnstile or hCaptcha in front of the insert — and is worth
+doing the day this link gets real attention.
+
 ### Sending vs. talking
 
 Automated mail goes **out** through Resend, which signs it with DKIM on

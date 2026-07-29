@@ -202,6 +202,11 @@ begin
   delete from public.waitlist_mailer_dispatch
   where created_at < now() - interval '1 day';
 
+  -- The rate limit only ever looks back an hour, so a day is already
+  -- generous. Left alone this table grows for the lifetime of the site.
+  delete from public.waitlist_signup_attempt
+  where created_at < now() - interval '1 day';
+
   select count(*), min(coalesce(r.error_msg, 'HTTP ' || r.status_code))
   into v_failed, v_detail
   from public.waitlist_mailer_dispatch d

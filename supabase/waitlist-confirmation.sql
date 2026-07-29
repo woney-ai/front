@@ -48,8 +48,9 @@ returns table (id uuid, email text)
 language plpgsql
 as $$
 declare
-  spent  integer;
-  budget integer;
+  spent      integer;
+  budget     integer;
+  last_hour  integer;
 begin
   -- Two things have to be true for the cap to hold, and `for update skip
   -- locked` below gives neither. It serializes which *rows* each caller takes;
@@ -61,6 +62,29 @@ begin
   -- against other claims. It is held only for the claim — sending happens
   -- after this function returns — so contention is a few milliseconds.
   perform pg_advisory_xact_lock(4162003001);
+
+  -- Delivery breaker. The per-address limit in waitlist-rate-limit.sql stops
+  -- one script; it does not stop a distributed one, and the damage from a
+  -- flood is not the rows — it is mailing hundreds of invented addresses and
+  -- handing the sending domain a bounce rate it does not recover from.
+  --
+  -- So an implausible hour stops delivery rather than the signup. Rows keep
+  -- being captured, exactly as when a dispatch fails: a signup we hold and do
+  -- not confirm is recoverable, a signup we refuse is gone.
+  --
+  -- This defers, it does not resolve. Whatever is in the queue is still there
+  -- when the hour passes. The warning is the point — it buys a human the time
+  -- to look at the table and delete the junk before any of it is mailed.
+  select count(*) into last_hour
+  from public.waitlist
+  where created_at > now() - interval '1 hour';
+
+  if last_hour > 60 then
+    raise warning
+      'waitlist mailer: % signups in the last hour, delivery paused pending review',
+      last_hour;
+    return;
+  end if;
 
   -- Second, budget has to count sends already in flight. `confirmation_sent_at`
   -- is written after the Resend round-trip, so a claimed-but-unsent row is a

@@ -4,9 +4,16 @@ import type { WaitlistInput } from './schema'
 
 const UNIQUE_VIOLATION = '23505'
 
+/**
+ * Raised by the rate limit trigger. PostgREST reads the `PT` prefix as an
+ * instruction to answer with that HTTP status, so this arrives as a 429.
+ */
+const RATE_LIMITED = 'PT429'
+
 export type JoinWaitlistResult =
   | { status: 'joined' }
   | { status: 'already-joined' }
+  | { status: 'rate-limited' }
 
 /**
  * Captures a signup. `source` and `referrer` are stored so we can tell
@@ -31,6 +38,10 @@ export async function joinWaitlist({
 
   if (error.code === UNIQUE_VIOLATION) {
     return { status: 'already-joined' }
+  }
+
+  if (error.code === RATE_LIMITED) {
+    return { status: 'rate-limited' }
   }
 
   throw new Error(error.message)
