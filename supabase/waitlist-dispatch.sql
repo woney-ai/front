@@ -216,11 +216,12 @@ security definer
 set search_path = public, extensions
 as $$
 declare
-  v_failed   integer;
-  v_stalled  integer;
-  v_bounced  integer;
-  v_resolved integer;
-  v_detail   text;
+  v_failed     integer;
+  v_stalled    integer;
+  v_unresolved integer;
+  v_bounced    integer;
+  v_resolved   integer;
+  v_detail     text;
 begin
   -- pg_net prunes `_http_response` after a few hours, so anything older than
   -- that can no longer be judged. Drop it rather than keep unjoinable rows.
@@ -266,6 +267,23 @@ begin
   -- reconciler in waitlist-delivery.sql writes the answer here; this reads it.
   -- Ten per cent sustained is where mailbox providers start treating a domain
   -- as careless, and a small list crosses that on a handful of typos.
+  -- A reconciler that always fails looks exactly like one with no work: rows
+  -- keep a null delivery_status and nothing complains. That is how a
+  -- Sending-only API key went unnoticed until someone read the counters by
+  -- hand. Delivery settles in minutes, so an hour of silence is not patience.
+  select count(*)
+  into v_unresolved
+  from public.waitlist
+  where provider_message_id is not null
+    and delivery_status is null
+    and confirmation_sent_at < now() - interval '1 hour';
+
+  if v_unresolved > 0 then
+    raise warning
+      'waitlist mailer: % message(s) sent over an hour ago with no delivery status — is the reconciler failing?',
+      v_unresolved;
+  end if;
+
   select
     count(*) filter (where delivery_status = 'bounced'),
     count(*)

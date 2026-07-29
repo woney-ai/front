@@ -75,7 +75,8 @@ Setup, in order:
 
    | Secret | Value |
    | --- | --- |
-   | `RESEND_API_KEY` | `re_…` |
+   | `RESEND_API_KEY` | `re_…` (Sending access is enough) |
+   | `RESEND_READ_API_KEY` | `re_…` with **Full access** — see below |
    | `WAITLIST_FROM` | `Woney <hello@woney.ai>` |
    | `WAITLIST_REPLY_TO` | `hello@woney.ai` (optional, this is the default) |
    | `WAITLIST_BATCH_SIZE` | optional, default `20` |
@@ -146,6 +147,14 @@ providers start treating a domain as careless.
 It polls rather than taking a webhook. A webhook buys latency nothing here
 consumes — nobody acts on a bounce in real time — and costs a public endpoint,
 signature verification and another surface to defend.
+
+The reconciler needs its own key. Resend has no read-only permission, so
+retrieving a message requires **Full access**, while sending needs only
+*Sending access*. They stay separate: the send path runs far more often and the
+narrow key is the one worth keeping there. A Sending-only key in
+`RESEND_READ_API_KEY` fails in the quietest possible way — mail goes out
+normally, every poll 401s, and `delivery_status` stays null forever. The health
+check watches for exactly that and warns after an hour.
 
 This is also the query that says what the list is worth:
 

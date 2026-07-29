@@ -71,6 +71,17 @@ async function lastEvent(apiKey: string, messageId: string): Promise<string> {
     return 'expired'
   }
 
+  // Worth naming, because it is silent otherwise and it already happened once.
+  // Resend has no read-only permission: a key scoped to Sending can post a
+  // message and cannot ask about one. Sends keep working, every poll fails,
+  // and delivery_status stays null forever while nothing looks broken.
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      `Resend refused the read (${response.status}). RESEND_READ_API_KEY ` +
+        'needs Full access — a Sending-only key cannot retrieve messages.',
+    )
+  }
+
   if (!response.ok) {
     throw new Error(
       `Resend responded ${response.status}: ${await response.text()}`,
@@ -89,7 +100,10 @@ Deno.serve(async () => {
     { auth: { persistSession: false } },
   )
 
-  const apiKey = required('RESEND_API_KEY')
+  // Its own key, on purpose. Reading requires Full access in Resend, and the
+  // send path runs far more often against far more input — it keeps the narrow
+  // Sending-only key rather than inheriting a broader one it never needs.
+  const apiKey = required('RESEND_READ_API_KEY')
 
   const { data, error } = await supabase.rpc('claim_waitlist_deliveries', {
     batch_size: numeric('WAITLIST_RECONCILE_BATCH_SIZE', 40),
