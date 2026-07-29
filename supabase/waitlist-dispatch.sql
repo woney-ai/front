@@ -215,9 +215,11 @@ security definer
 set search_path = public, extensions
 as $$
 declare
-  v_failed  integer;
-  v_stalled integer;
-  v_detail  text;
+  v_failed   integer;
+  v_stalled  integer;
+  v_bounced  integer;
+  v_resolved integer;
+  v_detail   text;
 begin
   -- pg_net prunes `_http_response` after a few hours, so anything older than
   -- that can no longer be judged. Drop it rather than keep unjoinable rows.
@@ -255,6 +257,25 @@ begin
     raise warning
       'waitlist mailer: % signup(s) unconfirmed for over 45 minutes',
       v_stalled;
+  end if;
+
+  -- Bounces are the one failure the send path cannot see: Resend accepts the
+  -- message, the receiving server rejects it later, and nothing says so. The
+  -- reconciler in waitlist-delivery.sql writes the answer here; this reads it.
+  -- Ten per cent sustained is where mailbox providers start treating a domain
+  -- as careless, and a small list crosses that on a handful of typos.
+  select
+    count(*) filter (where delivery_status = 'bounced'),
+    count(*)
+  into v_bounced, v_resolved
+  from public.waitlist
+  where confirmation_sent_at > now() - interval '7 days'
+    and public.waitlist_delivery_is_terminal(delivery_status);
+
+  if v_resolved >= 20 and v_bounced * 10 > v_resolved then
+    raise warning
+      'waitlist mailer: % of % delivered messages bounced in the last 7 days',
+      v_bounced, v_resolved;
   end if;
 end;
 $$;

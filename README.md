@@ -105,6 +105,39 @@ under *Logs → Postgres*. Without it a broken deploy is indistinguishable from
 an empty queue — which is exactly how this pipeline once sat dead with a real
 signup waiting in it.
 
+### Knowing what actually arrived
+
+`confirmation_sent_at` means Resend accepted the message. Whether a human
+received it is decided later by the receiving server, and nothing reports it
+back — so the table can say a hundred confirmations went out while a quarter
+of them bounced, and be truthful about it.
+
+That gap costs nothing today and everything on launch day, which is the one
+send that has to land. Mailing an address book of unknown quality in a single
+burst is how a young domain teaches Gmail to distrust it.
+
+Run [`supabase/waitlist-delivery.sql`](./supabase/waitlist-delivery.sql) and
+deploy `reconcile-waitlist-delivery`. Every send stores its provider message
+id; a job every ten minutes asks Resend what became of each one and writes the
+answer to `delivery_status`. The health check warns when bounces pass ten per
+cent of resolved messages over a week, which is roughly where mailbox
+providers start treating a domain as careless.
+
+It polls rather than taking a webhook. A webhook buys latency nothing here
+consumes — nobody acts on a bounce in real time — and costs a public endpoint,
+signature verification and another surface to defend.
+
+This is also the query that says what the list is worth:
+
+```sql
+select
+  count(*)                                             as captured,
+  count(*) filter (where delivery_status = 'delivered') as delivered,
+  count(*) filter (where delivery_status = 'bounced')   as bounced,
+  count(*) filter (where delivery_status is null)       as unknown
+from public.waitlist;
+```
+
 ### Abuse
 
 The insert policy is open to `anon` by necessity — the form posts straight to
@@ -166,9 +199,12 @@ src/
 supabase/
   waitlist.sql               table + insert-only RLS policy
   waitlist-confirmation.sql  queue columns + claim function
-  waitlist-dispatch.sql      insert trigger + sweep schedule
+  waitlist-dispatch.sql      insert trigger, sweep schedule, health check
+  waitlist-rate-limit.sql    per-address throttle on the public insert
+  waitlist-delivery.sql      delivery reconciliation + schedule
   functions/
     send-waitlist-confirmation/   edge function + email template
+    reconcile-waitlist-delivery/  asks Resend what actually arrived
 ```
 
 The Supabase SDK is dynamically imported inside `lib/supabase.ts` so it stays

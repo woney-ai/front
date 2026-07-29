@@ -52,12 +52,21 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type PendingRow = { id: string; email: string }
 
+/**
+ * Sends one confirmation and returns the provider's message id.
+ *
+ * That id is the whole reason this returns anything. A 2xx here means Resend
+ * accepted the message, not that anyone received it — delivery resolves later,
+ * out of band. Keeping the id is what lets the reconciler ask afterwards, and
+ * without it a bounce is something you can only discover by opening a
+ * dashboard, which is to say never.
+ */
 async function send(
   apiKey: string,
   from: string,
   replyTo: string,
   to: string,
-): Promise<void> {
+): Promise<string | null> {
   const { subject, html, text } = confirmationEmail()
 
   const response = await fetch(RESEND_ENDPOINT, {
@@ -80,6 +89,17 @@ async function send(
     throw new Error(
       `Resend responded ${response.status}: ${await response.text()}`,
     )
+  }
+
+  // The message is already gone. A response we cannot parse costs us the
+  // ability to follow it up, which is worth a null and a log — never a throw
+  // that would mark the row unsent and mail this address a second time.
+  try {
+    const body = (await response.json()) as { id?: string }
+    return body.id ?? null
+  } catch (cause) {
+    console.error(`could not read the message id for ${to}`, cause)
+    return null
   }
 }
 
@@ -110,41 +130,49 @@ Deno.serve(async () => {
     return Response.json({ claimed: 0, sent: 0, failed: 0 })
   }
 
-  const sent: string[] = []
-  const failed: string[] = []
+  let sent = 0
+  let failed = 0
+  let unmarked = 0
 
   for (const [index, row] of pending.entries()) {
     if (index > 0) await sleep(SEND_INTERVAL_MS)
 
+    let messageId: string | null
+
     try {
-      await send(apiKey, from, replyTo, row.email)
-      sent.push(row.id)
+      messageId = await send(apiKey, from, replyTo, row.email)
     } catch (cause) {
       // The row keeps confirmation_sent_at null, so the next run retries it
       // once the lease expires — up to max_attempts, then it is abandoned.
-      failed.push(row.id)
+      failed += 1
       console.error(`send failed for ${row.id}`, cause)
+      continue
     }
-  }
 
-  if (sent.length > 0) {
+    // Marked one at a time, immediately after its own send. Marking the whole
+    // batch at the end was cheaper by one round trip and wrong in the way that
+    // matters: this function can be killed mid-batch, and everything already
+    // delivered would then be resent once the lease expired. Per row, a crash
+    // costs one duplicate instead of twenty. It is also the only shape that
+    // can store a different message id per row.
     const { error: markError } = await supabase
       .from('waitlist')
-      .update({ confirmation_sent_at: new Date().toISOString() })
-      .in('id', sent)
+      .update({
+        confirmation_sent_at: new Date().toISOString(),
+        provider_message_id: messageId,
+      })
+      .eq('id', row.id)
 
-    // Delivered but unmarked. The lease keeps the row quiet for retry_after,
-    // then it sends again — a duplicate is the acceptable failure here, and
-    // max_attempts bounds how many.
     if (markError) {
-      console.error('mark failed after delivery', markError, sent)
-      return Response.json({ error: markError.message }, { status: 500 })
+      // Delivered but unmarked. The lease keeps the row quiet for retry_after,
+      // then it sends again — one duplicate, bounded by max_attempts.
+      unmarked += 1
+      console.error(`mark failed after delivery for ${row.id}`, markError)
+      continue
     }
+
+    sent += 1
   }
 
-  return Response.json({
-    claimed: pending.length,
-    sent: sent.length,
-    failed: failed.length,
-  })
+  return Response.json({ claimed: pending.length, sent, failed, unmarked })
 })
