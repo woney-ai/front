@@ -48,14 +48,40 @@ returns table (id uuid, email text)
 language plpgsql
 as $$
 declare
-  sent_last_24h integer;
+  spent  integer;
   budget integer;
 begin
-  select count(*) into sent_last_24h
-  from public.waitlist
-  where confirmation_sent_at > now() - interval '24 hours';
+  -- Two things have to be true for the cap to hold, and `for update skip
+  -- locked` below gives neither. It serializes which *rows* each caller takes;
+  -- it does nothing about how much budget each caller thinks it has.
+  --
+  -- First, no two callers may compute a budget from the same snapshot. The
+  -- insert trigger fires per statement and the sweep runs on its own schedule,
+  -- so they overlap routinely. This lock makes the read-then-claim atomic
+  -- against other claims. It is held only for the claim — sending happens
+  -- after this function returns — so contention is a few milliseconds.
+  perform pg_advisory_xact_lock(4162003001);
 
-  budget := least(batch_size, daily_cap - sent_last_24h);
+  -- Second, budget has to count sends already in flight. `confirmation_sent_at`
+  -- is written after the Resend round-trip, so a claimed-but-unsent row is a
+  -- send that will happen and that nothing else can see yet. Counting only
+  -- delivered rows means two callers a second apart both believe the same slot
+  -- is free. `confirmation_last_attempt_at` is set inside the claiming UPDATE
+  -- below, atomically, which makes it the honest measure of committed spend.
+  --
+  -- A row still counts for `retry_after` after a failed attempt, so a
+  -- permanently broken address holds a slot briefly. That is the direction to
+  -- err in: overshooting the provider's limit costs deliverability for
+  -- everyone, undershooting costs one confirmation a quarter of an hour.
+  select count(*) into spent
+  from public.waitlist
+  where confirmation_sent_at > now() - interval '24 hours'
+     or (
+       confirmation_sent_at is null
+       and confirmation_last_attempt_at > now() - retry_after
+     );
+
+  budget := least(batch_size, daily_cap - spent);
 
   if budget <= 0 then
     return;
