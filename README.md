@@ -89,6 +89,10 @@ Setup, in order:
 Raise `WAITLIST_DAILY_CAP` when the Resend plan changes — it defaults to 95,
 just under the free tier's 100 per day.
 
+The sweep costs nothing when there is nothing to do: `invoke_waitlist_mailer()`
+checks for pending rows before it opens a connection, so a quiet night is 96
+index lookups rather than 96 function invocations.
+
 A dispatch failure never reaches the visitor. The trigger catches it, logs a
 warning and lets the signup commit, because a signup we captured but did not
 confirm is recoverable and a signup we refused is gone.

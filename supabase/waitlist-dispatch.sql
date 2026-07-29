@@ -95,6 +95,28 @@ as $$
 declare
   v_request_id bigint;
 begin
+  -- Nothing to do, so do nothing. Both callers arrive here — the insert
+  -- trigger, where the new row is already visible and this passes, and the
+  -- fifteen-minute sweep, which is the one that spends most of its life
+  -- waking an edge function up to be told the queue is empty.
+  --
+  -- The 5 mirrors `max_attempts` in claim_waitlist_confirmations(). Raise it
+  -- there and this guard silently stops dispatching for the rows between the
+  -- two values, which is the failure this comment exists to prevent.
+  --
+  -- This does narrow observability: an empty queue no longer produces a
+  -- dispatch to inspect, so a broken function goes unnoticed until the next
+  -- real signup. That is the moment it starts mattering, and the health
+  -- check's stalled-signup branch catches it from the other side.
+  if not exists (
+    select 1
+    from public.waitlist
+    where confirmation_sent_at is null
+      and confirmation_attempts < 5
+  ) then
+    return;
+  end if;
+
   select net.http_post(
     url := 'https://ymrqdnaiclanibgpujot.supabase.co/functions/v1/send-waitlist-confirmation',
     headers := jsonb_build_object(
