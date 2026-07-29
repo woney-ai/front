@@ -34,9 +34,16 @@ create index if not exists waitlist_delivery_pending
 -- Resend has pruned and answers 404 for — an answer, not a reason to keep
 -- asking forever.
 
+-- `recheck_after` must stay well under the cron period below. Set equal to it
+-- and the lease expires a fraction of a second after each run begins, so every
+-- row is skipped and picked up on the following pass — a queue that quietly
+-- runs at half the cadence it appears to.
+--
+-- `batch_size` is sized against the daily send cap rather than the cadence: at
+-- 100 a full day of sending drains in a single run instead of three.
 create or replace function public.claim_waitlist_deliveries(
-  batch_size integer default 40,
-  recheck_after interval default interval '10 minutes',
+  batch_size integer default 100,
+  recheck_after interval default interval '15 minutes',
   give_up_after interval default interval '3 days'
 )
 returns table (id uuid, provider_message_id text)
@@ -124,11 +131,18 @@ where exists (
   select 1 from cron.job where jobname = 'reconcile-waitlist-delivery'
 );
 
--- Delivery settles in seconds to minutes. Ten is unhurried on purpose: the
--- answer keeps until someone reads it.
+-- Four times a day, and the spacing is a feature rather than a concession.
+-- Asking ten minutes after a send often catches a message still queued and
+-- buys nothing but another poll later; asking six hours later gets a settled
+-- answer the first time. Fewer runs cost fewer calls per row, not just fewer
+-- runs.
+--
+-- Capacity check, since this is the number that would bite: four runs of 100
+-- against a daily send cap of 95. The health check's unresolved threshold is
+-- tied to this cadence — move one and move the other.
 select cron.schedule(
   'reconcile-waitlist-delivery',
-  '*/10 * * * *',
+  '0 */6 * * *',
   $$select public.invoke_waitlist_reconciler()$$
 );
 

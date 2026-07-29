@@ -106,7 +106,7 @@ Deno.serve(async () => {
   const apiKey = required('RESEND_READ_API_KEY')
 
   const { data, error } = await supabase.rpc('claim_waitlist_deliveries', {
-    batch_size: numeric('WAITLIST_RECONCILE_BATCH_SIZE', 40),
+    batch_size: numeric('WAITLIST_RECONCILE_BATCH_SIZE', 100),
   })
 
   if (error) {

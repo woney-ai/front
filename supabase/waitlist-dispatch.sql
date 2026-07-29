@@ -270,17 +270,25 @@ begin
   -- A reconciler that always fails looks exactly like one with no work: rows
   -- keep a null delivery_status and nothing complains. That is how a
   -- Sending-only API key went unnoticed until someone read the counters by
-  -- hand. Delivery settles in minutes, so an hour of silence is not patience.
+  -- hand.
+  --
+  -- Twelve hours is twice the reconciler's six-hour cadence, and the pairing
+  -- is the whole point. A message sent just after a run legitimately waits
+  -- nearly six hours for its first poll, so a tighter threshold would fire
+  -- during normal operation — and an alarm that goes off when nothing is
+  -- wrong is worse than no alarm, because it teaches you to ignore the one
+  -- that matters. Change the schedule in waitlist-delivery.sql and change
+  -- this with it.
   select count(*)
   into v_unresolved
   from public.waitlist
   where provider_message_id is not null
     and delivery_status is null
-    and confirmation_sent_at < now() - interval '1 hour';
+    and confirmation_sent_at < now() - interval '12 hours';
 
   if v_unresolved > 0 then
     raise warning
-      'waitlist mailer: % message(s) sent over an hour ago with no delivery status — is the reconciler failing?',
+      'waitlist mailer: % message(s) sent over 12 hours ago with no delivery status — is the reconciler failing?',
       v_unresolved;
   end if;
 

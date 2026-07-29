@@ -139,10 +139,19 @@ burst is how a young domain teaches Gmail to distrust it.
 
 Run [`supabase/waitlist-delivery.sql`](./supabase/waitlist-delivery.sql) and
 deploy `reconcile-waitlist-delivery`. Every send stores its provider message
-id; a job every ten minutes asks Resend what became of each one and writes the
+id; a job every six hours asks Resend what became of each one and writes the
 answer to `delivery_status`. The health check warns when bounces pass ten per
 cent of resolved messages over a week, which is roughly where mailbox
 providers start treating a domain as careless.
+
+Six hours rather than minutes, and the spacing is a feature. Asking too soon
+catches a message still queued and buys another poll later; asking once, late,
+gets a settled answer the first time. Two numbers are tied to that cadence and
+must move with it: `recheck_after` has to stay well under it, or the lease
+expires just after each run begins and every row waits for the following pass;
+and the health check's unresolved threshold is twice the cadence, because a
+message sent right after a run legitimately waits nearly six hours for its
+first poll.
 
 It polls rather than taking a webhook. A webhook buys latency nothing here
 consumes — nobody acts on a bounce in real time — and costs a public endpoint,
