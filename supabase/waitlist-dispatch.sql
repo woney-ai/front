@@ -65,6 +65,21 @@ begin
 end;
 $$;
 
+-- Every dispatch is recorded here so its outcome can be looked up afterwards.
+-- `net.http_post` returns a request id and nothing else — the response lands
+-- later in `net._http_response`, asynchronously, with no way back into the
+-- calling transaction. Without this row there is no key to join on, which is
+-- how an undeployed function stayed invisible: the POST 404'd every time and
+-- the database had no record that it had ever asked.
+create table if not exists public.waitlist_mailer_dispatch (
+  request_id bigint primary key,
+  created_at timestamptz not null default now()
+);
+
+alter table public.waitlist_mailer_dispatch enable row level security;
+
+revoke all on table public.waitlist_mailer_dispatch from public, anon, authenticated;
+
 -- Invokes the edge function. `net.http_post` only enqueues the request, so
 -- this never blocks the caller, and the enqueued row is part of the calling
 -- transaction — a rolled back signup sends nothing.
@@ -77,8 +92,10 @@ language plpgsql
 security definer
 set search_path = public, extensions
 as $$
+declare
+  v_request_id bigint;
 begin
-  perform net.http_post(
+  select net.http_post(
     url := 'https://ymrqdnaiclanibgpujot.supabase.co/functions/v1/send-waitlist-confirmation',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
@@ -90,7 +107,10 @@ begin
     ),
     body := '{}'::jsonb,
     timeout_milliseconds := 120000
-  );
+  ) into v_request_id;
+
+  insert into public.waitlist_mailer_dispatch (request_id)
+  values (v_request_id);
 end;
 $$;
 
@@ -99,6 +119,17 @@ $$;
 -- spam the mailer.
 revoke all on function public.invoke_waitlist_mailer() from public, anon, authenticated;
 
+-- The exception block is the whole point of this wrapper.
+--
+-- An `after insert` trigger runs inside the inserting statement, so an error
+-- raised here aborts the signup itself: the visitor gets a failed form because
+-- something went wrong on the way to sending an email. That trade is never
+-- worth it. A signup we captured but did not confirm is recoverable — the
+-- sweep retries it. A signup we refused is gone.
+--
+-- This does not swallow Resend outages; `net.http_post` merely enqueues and
+-- would not have raised anyway. It catches the enqueue path itself failing —
+-- pg_net missing, Vault unreadable, the dispatch insert conflicting.
 create or replace function public.on_waitlist_insert()
 returns trigger
 language plpgsql
@@ -106,7 +137,15 @@ security definer
 set search_path = public
 as $$
 begin
-  perform public.invoke_waitlist_mailer();
+  begin
+    perform public.invoke_waitlist_mailer();
+  exception
+    when others then
+      -- Postgres logs, visible under Supabase Logs. The row stays unsent with
+      -- confirmation_attempts still 0, so the sweep picks it up regardless.
+      raise warning 'waitlist mailer dispatch failed: % (%)', sqlerrm, sqlstate;
+  end;
+
   return null;
 end;
 $$;
@@ -137,6 +176,73 @@ select cron.schedule(
   'sweep-waitlist-confirmations',
   '*/15 * * * *',
   $$select public.invoke_waitlist_mailer()$$
+);
+
+-- Turns a silent failure into a loud one.
+--
+-- Everything above is fire-and-forget: the trigger cannot see the HTTP result,
+-- and a request that never reaches the function never increments
+-- `confirmation_attempts`. So a broken deploy looks exactly like an idle queue
+-- — which is precisely how this pipeline sat dead with a real signup waiting
+-- in it. The check below is the one component that reads the outcome back and
+-- says so out loud.
+create or replace function public.check_waitlist_mailer_health()
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_failed  integer;
+  v_stalled integer;
+  v_detail  text;
+begin
+  -- pg_net prunes `_http_response` after a few hours, so anything older than
+  -- that can no longer be judged. Drop it rather than keep unjoinable rows.
+  delete from public.waitlist_mailer_dispatch
+  where created_at < now() - interval '1 day';
+
+  select count(*), min(coalesce(r.error_msg, 'HTTP ' || r.status_code))
+  into v_failed, v_detail
+  from public.waitlist_mailer_dispatch d
+  join net._http_response r on r.id = d.request_id
+  where d.created_at > now() - interval '1 hour'
+    and (r.status_code is null or r.status_code >= 300);
+
+  if v_failed > 0 then
+    raise warning
+      'waitlist mailer: % failed dispatch(es) in the last hour, e.g. %',
+      v_failed, v_detail;
+  end if;
+
+  -- A row still unsent well past two sweeps means delivery is not recovering
+  -- on its own, whatever the HTTP layer reported.
+  select count(*)
+  into v_stalled
+  from public.waitlist
+  where confirmation_sent_at is null
+    and confirmation_attempts < 5
+    and created_at < now() - interval '45 minutes';
+
+  if v_stalled > 0 then
+    raise warning
+      'waitlist mailer: % signup(s) unconfirmed for over 45 minutes',
+      v_stalled;
+  end if;
+end;
+$$;
+
+revoke all on function public.check_waitlist_mailer_health() from public, anon, authenticated;
+
+select cron.unschedule('check-waitlist-mailer-health')
+where exists (
+  select 1 from cron.job where jobname = 'check-waitlist-mailer-health'
+);
+
+select cron.schedule(
+  'check-waitlist-mailer-health',
+  '0 * * * *',
+  $$select public.check_waitlist_mailer_health()$$
 );
 
 -- Useful afterwards:

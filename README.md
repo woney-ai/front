@@ -89,6 +89,18 @@ Setup, in order:
 Raise `WAITLIST_DAILY_CAP` when the Resend plan changes — it defaults to 95,
 just under the free tier's 100 per day.
 
+A dispatch failure never reaches the visitor. The trigger catches it, logs a
+warning and lets the signup commit, because a signup we captured but did not
+confirm is recoverable and a signup we refused is gone.
+
+That leaves the failure invisible, so a second job closes the loop. Every
+dispatch records its `pg_net` request id, and `check_waitlist_mailer_health()`
+runs hourly to join those against the responses and raise a warning for any
+non-2xx, or for any signup left unconfirmed past 45 minutes. Both surface
+under *Logs → Postgres*. Without it a broken deploy is indistinguishable from
+an empty queue — which is exactly how this pipeline once sat dead with a real
+signup waiting in it.
+
 ### Sending vs. talking
 
 Automated mail goes **out** through Resend, which signs it with DKIM on
