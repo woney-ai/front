@@ -7,9 +7,10 @@ import { cn } from '@/lib/utils'
  * of a Woney credential — minted against a held amount, capped, authorized
  * once, then dead. Numbers here are sample data.
  *
- * The `locked` phase means capped and single-use, NOT locked to a merchant.
- * Nothing in the product restricts where a card can be spent, and the wording
- * around this artifact must never suggest otherwise.
+ * The merchant shown is captured data, not an enforced restriction — today
+ * `intended_merchant` is recorded and forwarded, and binding the card to it is
+ * on the MVP path. Displaying it is fine and deliberate. Prose asserting the
+ * card is locked to that merchant is not, until the enforcement ships.
  */
 
 type Phase = 'minting' | 'locked' | 'authorized' | 'expired'
@@ -167,15 +168,18 @@ export function SingleUseCard({ className }: { className?: string }) {
               </p>
             </div>
 
-            <dl className="grid grid-cols-[1fr_1fr_auto] gap-4">
+            <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-4">
               {[
-                // `Funds` rather than `Merchant`. A merchant name on the face
-                // of a card reads as a restriction, and there is none — the
-                // card is capped and single-use, not bound to a store. What is
-                // genuinely true, and the better claim, is that the money was
-                // already authorized on the real card before this one existed.
+                // The merchant is real captured data: `intended_merchant` is
+                // stored on the card row and sent to the provider. Showing it
+                // is honest and it is where the product is heading — binding
+                // the card to that merchant is on the MVP path.
+                //
+                // What it is not yet is an enforced restriction. Keep it as a
+                // field on the card; do not write prose that says the card is
+                // locked to it until the enforcement ships.
+                { term: 'Merchant', value: 'northwind.shop' },
                 { term: 'Amount', value: '$142.60' },
-                { term: 'Funds', value: 'Held' },
                 { term: 'Uses', value: isDead ? '1 / 1' : '0 / 1' },
               ].map(({ term, value }) => (
                 <div key={term} className="min-w-0">
@@ -202,7 +206,7 @@ export function SingleUseCard({ className }: { className?: string }) {
 
       <figcaption className="mt-6 flex items-center gap-2.5 text-[0.8125rem] text-bone-faint">
         <span className="h-px flex-1 bg-line" />
-        Illustrative. One card, one amount, one use.
+        Illustrative. One card, one merchant, one amount, one use.
         <span className="h-px flex-1 bg-line" />
       </figcaption>
     </figure>
