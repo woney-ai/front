@@ -13,7 +13,7 @@ const audiences = [
     title: 'A new class of buyer',
     points: [
       'It settles on the card rails you already accept — zero checkout changes.',
-      'Every card is backed by funds a human already authorized and we already hold.',
+      'Every card is backed by a human who authorized the spend in advance.',
       'Single-use numbers mean nothing worth stealing sits in your order data.',
     ],
   },

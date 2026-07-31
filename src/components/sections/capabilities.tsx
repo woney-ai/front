@@ -17,9 +17,9 @@ const capabilities = [
       'Each card only works at the store it was issued for. Anywhere else, the transaction never authorizes.',
   },
   {
-    title: 'A limit that actually stops it',
+    title: 'Approval only when it matters',
     description:
-      'Under the limit the agent just buys. Over it, no card comes back — not a warning, not a retry, no card and no charge.',
+      'Under your limit the agent just buys. Over it, no card is issued and the decision comes to you — the only moment you are asked for one.',
   },
   {
     title: 'Structured receipts',

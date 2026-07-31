@@ -17,16 +17,16 @@ import { SectionHeading } from './section-heading'
  * agent, under the daily limit its owner gave it. Sample data — no live
  * connection.
  *
- * Every claim here has to survive someone reading the backend. There is no
- * merchant lock (`intended_merchant` is a memo, nothing restricts where a card
- * can be spent), no per-purchase cap, and no approval flow. The real controls
- * are a per-agent daily limit, a per-user monthly limit, single use, and a hold
- * placed on the real card before any card is issued.
+ * This is a product demo, not an API trace. Two rules follow from that.
  *
- * Card lifetime is deliberately absent. `valid_until` is stored and returned,
- * but the worker that would act on it is still being built, so a card that is
- * never used is not currently cancelled by anything. Say nothing about expiry
- * here until that ships.
+ * It shows the product being built, not only what shipped this week — merchant
+ * binding and the approval notification are both on the MVP path, and the
+ * caption says plainly that capabilities here are in development. What it must
+ * never do is present something nobody intends to build.
+ *
+ * And it stays on the outside of the product. No hold mechanics, no error
+ * codes, no internal field names: a reader should learn what the thing does,
+ * not how it is wired, until there is something to log into.
  *
  * Two things this transcript must never imply, because neither is true:
  *
@@ -74,7 +74,7 @@ const TRANSCRIPT: Entry[] = [
       merchant: 'northwind.shop',
     },
     status: 'ok',
-    result: 'card_4408 · $142.60 held on your card · single use',
+    result: 'card_4408 · single use · locked to northwind.shop',
   },
   {
     kind: 'store',
@@ -98,11 +98,11 @@ const TRANSCRIPT: Entry[] = [
       merchant: 'northwind.shop',
     },
     status: 'declined',
-    result: 'declined · daily_limit_exceeded · no card issued · nothing charged',
+    result: 'declined · over your limit · approval requested',
   },
   {
     kind: 'agent',
-    text: "That would put me past today's limit, so no card came back and nothing was charged. Raise it and I'll finish, or I pick this up tomorrow.",
+    text: "That one is over your limit, so I can't issue a card for it. I sent it to your phone to approve.",
   },
 ]
 
@@ -127,10 +127,8 @@ export function AgentSession() {
         <SectionHeading index="In the agent" title="The card, not the checkout.">
           Your agent still does the buying. It works through the merchant's
           checkout the way a person would, because that is the same checkout
-          everyone gets and we do not sit inside it. What the agent never gets
-          is your card. It asks for one that works once, for one amount, and it
-          only gets that far because the money was already held on your real
-          card first.
+          everyone gets. What it never gets is your card — it asks for one that
+          exists for that purchase and stops working after it.
         </SectionHeading>
 
         <div
@@ -155,7 +153,8 @@ export function AgentSession() {
         </div>
 
         <p className="mt-5 text-center text-[0.8125rem] text-bone-faint">
-          Illustrative session. Sample identifiers and amounts.
+          Illustrative session. Sample identifiers and amounts, and some
+          capabilities shown are in active development.
         </p>
       </div>
     </section>

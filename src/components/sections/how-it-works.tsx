@@ -17,7 +17,7 @@ const steps = [
     step: '03',
     title: 'Woney issues one card',
     description:
-      'Your real card is held for the amount first — if it declines, no card exists and you owe nothing. What the agent gets is good for that one transaction and no more.',
+      'A card that exists for that one purchase and nothing else: one merchant, one amount, one transaction. Your funding source settles it, and the number is worthless the moment it clears.',
   },
 ]
 
