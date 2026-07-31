@@ -41,12 +41,11 @@ export function Hero() {
               className="animate-rise mt-7 max-w-lg text-lg leading-relaxed text-pretty text-bone-dim"
               style={{ animationDelay: '0.16s' }}
             >
-              Give your agent{' '}
-              <span className="text-bone">spending power, not your card</span>.
-              Woney issues a fresh virtual card for each purchase — good for one
-              transaction, capped at the amount, dead in an hour. It works at
-              any checkout, and no card is ever issued until the money is
-              already held on yours.
+              Woney closes that gap. Your agent gets a{' '}
+              <span className="text-bone">real way to pay</span> — one that
+              works at any checkout, asks nothing of the merchant, and is never
+              your actual card. You decide what it can spend. It handles the
+              rest.
             </p>
 
             <div

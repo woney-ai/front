@@ -1,18 +1,21 @@
 # Woney — waitlist
 
-Landing page for Woney. Woney gives an AI agent the ability to pay: a fresh
-virtual card per purchase, good for one transaction, capped at the amount, and
-expiring within the hour — issued only after the money is held on the user's
-real card. The agent does the checkout itself, at whatever merchant, with no
-integration on the merchant's side. This page tests appetite for that and
-captures end-user emails.
+Landing page for Woney. Woney gives an AI agent the ability to pay: a virtual
+card per purchase, usable at any checkout with nothing for the merchant to
+integrate, issued only after the money is held on the user's real card. This
+page tests appetite for that and captures end-user emails.
 
-Copy on this page is constrained by what the backend actually does. Two claims
-that read well and are false, both of which shipped once: there is no merchant
-lock (nothing restricts where a card can be spent), and there is no manual
-approval flow. The real controls are a per-agent daily limit, a per-user
-monthly limit, single use, one hour of validity, and the pre-authorization
-hold. Check a claim against the backend before putting it on the page.
+Every capability claim here is constrained by what the backend actually does,
+and the page has already shipped three that were not true: a merchant lock
+(nothing restricts where a card can be spent — `intended_merchant` is a memo
+string), a per-purchase limit, and a manual approval flow. A fourth is stored
+but unenforced: `valid_until` is written and returned, and no worker expires
+anything, so the card's lifetime is not a promise the product currently keeps.
+
+What is real: a per-agent daily limit, a per-user monthly limit, single use
+enforced in three layers, and a pre-authorization hold placed before any card
+exists. Check a claim against the backend before putting it on the page —
+mechanism detail belongs below the fold anyway, not in the hero.
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Supabase · Bun · Vercel
 

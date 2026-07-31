@@ -17,7 +17,7 @@ const steps = [
     step: '03',
     title: 'Woney issues one card',
     description:
-      'Your real card is held for the amount first — if it declines, no card exists and you owe nothing. What the agent gets is good for one transaction, capped, and expires within the hour.',
+      'Your real card is held for the amount first — if it declines, no card exists and you owe nothing. What the agent gets is good for that one transaction and no more.',
   },
 ]
 

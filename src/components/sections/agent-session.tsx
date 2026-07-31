@@ -69,7 +69,7 @@ const TRANSCRIPT: Entry[] = [
       merchant: 'northwind.shop',
     },
     status: 'ok',
-    result: 'card_4408 · $142.60 held on your card · single use · expires 14:32',
+    result: 'card_4408 · $142.60 held on your card · single use',
   },
   {
     kind: 'store',
@@ -123,9 +123,9 @@ export function AgentSession() {
           Your agent still does the buying. It works through the merchant's
           checkout the way a person would, because that is the same checkout
           everyone gets and we do not sit inside it. What the agent never gets
-          is your card. It asks for one that works once, for one amount, and
-          expires within the hour — and it only gets that far because the money
-          was already held on your real card first.
+          is your card. It asks for one that works once, for one amount, and it
+          only gets that far because the money was already held on your real
+          card first.
         </SectionHeading>
 
         <div
