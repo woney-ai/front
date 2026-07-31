@@ -1,4 +1,11 @@
-import { Check, CornerDownRight, ShieldAlert, User, X } from 'lucide-react'
+import {
+  Check,
+  CornerDownRight,
+  ShieldAlert,
+  ShoppingCart,
+  User,
+  X,
+} from 'lucide-react'
 
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
 import { cn } from '@/lib/utils'
@@ -6,9 +13,21 @@ import { cn } from '@/lib/utils'
 import { SectionHeading } from './section-heading'
 
 /**
- * An illustrative MCP session: what buying through Woney looks like from
- * inside an agent, against a mandate the user already granted when they
- * connected their funding source. Sample data — no live connection.
+ * An illustrative session: what buying with Woney looks like from inside an
+ * agent, against a mandate the user granted when they connected their funding
+ * source. Sample data — no live connection.
+ *
+ * Two things this transcript must never imply, because neither is true:
+ *
+ *   Woney is not an MCP server. It is payment infrastructure. The agent asks
+ *   it for a card; how the agent reaches it is the agent's business.
+ *
+ *   Woney does not check out. There is no `woney.checkout`, and inventing one
+ *   would sell a capability that does not exist. The merchant's checkout is
+ *   the same page every shopper gets, and the agent works through it exactly
+ *   as a person would — unless that merchant has built something to help,
+ *   which is theirs, not ours. Hence the `store` step: it is the agent
+ *   labouring at a normal checkout, with no Woney in the loop.
  *
  * The transcript deliberately ends on a decline: autonomy inside the
  * mandate, a hard stop outside it.
@@ -17,6 +36,7 @@ import { SectionHeading } from './section-heading'
 type Entry =
   | { kind: 'user'; text: string }
   | { kind: 'agent'; text: string }
+  | { kind: 'store'; text: string; detail: string }
   | {
       kind: 'tool'
       tool: string
@@ -46,11 +66,9 @@ const TRANSCRIPT: Entry[] = [
     result: 'card_4408 · single use · locked to northwind.shop',
   },
   {
-    kind: 'tool',
-    tool: 'woney.checkout',
-    args: { card: 'card_4408', cart: 'nw_cart_91b2' },
-    status: 'ok',
-    result: 'order NW-77301 confirmed · card_4408 is now void',
+    kind: 'store',
+    text: "Filling in northwind.shop's checkout — the same one any shopper gets.",
+    detail: 'standard merchant checkout · card_4408 · no Woney in the loop',
   },
   {
     kind: 'agent',
@@ -95,10 +113,12 @@ export function AgentSession() {
   return (
     <section id="agent-session" className="border-t border-line">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
-        <SectionHeading index="In the agent" title="One tool call away.">
-          Woney is an MCP server, so checkout stops being a browser automation
-          problem and becomes something your agent can simply call — against
-          the mandate you already granted, and never outside it.
+        <SectionHeading index="In the agent" title="The card, not the checkout.">
+          Your agent still does the buying. It works through the merchant's
+          checkout the way a person would, because that is the same checkout
+          everyone gets and we do not sit inside it. What the agent never gets
+          is your card. It asks for one that works once, at one store, for one
+          amount, inside the mandate you already granted.
         </SectionHeading>
 
         <div
@@ -153,6 +173,28 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
         <p className="pt-0.5 text-[0.9375rem] leading-relaxed text-bone-dim">
           {entry.text}
         </p>
+      </div>
+    )
+  }
+
+  // The agent working the merchant's own checkout. Rendered plainly on
+  // purpose: no call signature, no arguments, nothing that could be mistaken
+  // for something Woney provides. This step is the part we do not do.
+  if (entry.kind === 'store') {
+    return (
+      <div className="flex gap-3.5">
+        <Avatar>
+          <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
+        </Avatar>
+
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="text-[0.9375rem] leading-relaxed text-bone-dim">
+            {entry.text}
+          </p>
+          <p className="mt-2 font-mono text-xs text-bone-faint">
+            {entry.detail}
+          </p>
+        </div>
       </div>
     )
   }

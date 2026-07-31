@@ -1,9 +1,9 @@
 const audiences = [
   {
     label: 'For agent builders',
-    title: 'A card as a tool call',
+    title: 'A card on request',
     points: [
-      'One request turns an approved cart into a ready-to-use card.',
+      'One request returns a card locked to a merchant and an amount.',
       'Deterministic declines your agent can actually recover from.',
       'Your users never hand their real card number to a model.',
     ],
