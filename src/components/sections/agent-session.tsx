@@ -14,8 +14,14 @@ import { SectionHeading } from './section-heading'
 
 /**
  * An illustrative session: what buying with Woney looks like from inside an
- * agent, against a mandate the user granted when they connected their funding
- * source. Sample data — no live connection.
+ * agent, under the daily limit its owner gave it. Sample data — no live
+ * connection.
+ *
+ * Every claim here has to survive someone reading the backend. There is no
+ * merchant lock (`intended_merchant` is a memo, nothing restricts where a card
+ * can be spent), no per-purchase cap, and no approval flow — the real controls
+ * are a per-agent daily limit, a per-user monthly limit, single use, an hour of
+ * validity, and a hold placed on the real card before any card is issued.
  *
  * Two things this transcript must never imply, because neither is true:
  *
@@ -52,23 +58,23 @@ const TRANSCRIPT: Entry[] = [
   },
   {
     kind: 'agent',
-    text: 'Found them at northwind.shop — $142.60 including shipping. That fits your mandate, so I can handle it.',
+    text: 'Found them at northwind.shop — $142.60 including shipping. That is inside my limit, so I can handle it.',
   },
   {
     kind: 'tool',
     tool: 'woney.issue_card',
     args: {
-      mandate: 'mnd_a8f3',
-      merchant: 'northwind.shop',
       amount: 142.6,
+      currency: 'USD',
+      merchant: 'northwind.shop',
     },
     status: 'ok',
-    result: 'card_4408 · single use · locked to northwind.shop',
+    result: 'card_4408 · $142.60 held on your card · single use · expires 14:32',
   },
   {
     kind: 'store',
-    text: "Filling in northwind.shop's checkout — the same one any shopper gets.",
-    detail: 'standard merchant checkout · card_4408 · no Woney in the loop',
+    text: "Paying at northwind.shop's checkout, the same one any shopper gets.",
+    detail: 'card_4408 · accepted like any card · nothing to integrate',
   },
   {
     kind: 'agent',
@@ -82,16 +88,16 @@ const TRANSCRIPT: Entry[] = [
     kind: 'tool',
     tool: 'woney.issue_card',
     args: {
-      mandate: 'mnd_a8f3',
-      merchant: 'northwind.shop',
       amount: 399.0,
+      currency: 'USD',
+      merchant: 'northwind.shop',
     },
     status: 'declined',
-    result: 'declined · over the $150 per-purchase limit · approval requested',
+    result: 'declined · daily_limit_exceeded · no card issued · nothing charged',
   },
   {
     kind: 'agent',
-    text: "That one is above your limit, so I can't issue a card for it. I sent it to your phone to approve.",
+    text: "That would put me past today's limit, so no card came back and nothing was charged. Raise it and I'll finish, or I pick this up tomorrow.",
   },
 ]
 
@@ -117,8 +123,9 @@ export function AgentSession() {
           Your agent still does the buying. It works through the merchant's
           checkout the way a person would, because that is the same checkout
           everyone gets and we do not sit inside it. What the agent never gets
-          is your card. It asks for one that works once, at one store, for one
-          amount, inside the mandate you already granted.
+          is your card. It asks for one that works once, for one amount, and
+          expires within the hour — and it only gets that far because the money
+          was already held on your real card first.
         </SectionHeading>
 
         <div
@@ -129,7 +136,7 @@ export function AgentSession() {
             <span className="rule-mono text-bone-faint">Agent session</span>
             <span className="rule-mono flex items-center gap-2 text-bone-faint">
               <span className="size-1.5 rounded-full bg-signal" aria-hidden />
-              Mandate mnd_a8f3 · active
+              Daily limit $500 · $142.60 used
             </span>
           </div>
 

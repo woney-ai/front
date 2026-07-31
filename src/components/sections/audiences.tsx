@@ -3,7 +3,7 @@ const audiences = [
     label: 'For agent builders',
     title: 'A card on request',
     points: [
-      'One request returns a card locked to a merchant and an amount.',
+      'One request returns a usable card number, capped and short-lived.',
       'Deterministic declines your agent can actually recover from.',
       'Your users never hand their real card number to a model.',
     ],
@@ -13,7 +13,7 @@ const audiences = [
     title: 'A new class of buyer',
     points: [
       'It settles on the card rails you already accept — zero checkout changes.',
-      'Every card is backed by a mandate a human explicitly authorized.',
+      'Every card is backed by funds a human already authorized and we already hold.',
       'Single-use numbers mean nothing worth stealing sits in your order data.',
     ],
   },

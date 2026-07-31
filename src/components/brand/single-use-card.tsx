@@ -4,8 +4,12 @@ import { cn } from '@/lib/utils'
 
 /**
  * The hero artifact: an illustrative virtual card running the real lifecycle
- * of a Woney credential — minted for one cart, locked to one merchant and
- * amount, authorized once, then dead. Numbers here are sample data.
+ * of a Woney credential — minted against a held amount, capped, authorized
+ * once, then dead. Numbers here are sample data.
+ *
+ * The `locked` phase means capped and single-use, NOT locked to a merchant.
+ * Nothing in the product restricts where a card can be spent, and the wording
+ * around this artifact must never suggest otherwise.
  */
 
 type Phase = 'minting' | 'locked' | 'authorized' | 'expired'
@@ -80,7 +84,7 @@ export function SingleUseCard({ className }: { className?: string }) {
   return (
     <figure
       className={cn('w-full max-w-[29rem] select-none', className)}
-      aria-label="Illustration of a Woney single-use card being minted, locked to one merchant and amount, authorized once, then expiring."
+      aria-label="Illustration of a Woney single-use card being minted against a held amount, capped to that amount, authorized once, then expiring."
     >
       <div
         className="relative"

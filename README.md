@@ -1,9 +1,18 @@
 # Woney — waitlist
 
-Landing page for Woney. Woney issues single-use virtual cards to AI agents so
-they can complete purchases at ecommerce checkouts on behalf of an end user —
-each card locked to one merchant, one amount, one transaction. This page tests
-appetite for that and captures end-user emails.
+Landing page for Woney. Woney gives an AI agent the ability to pay: a fresh
+virtual card per purchase, good for one transaction, capped at the amount, and
+expiring within the hour — issued only after the money is held on the user's
+real card. The agent does the checkout itself, at whatever merchant, with no
+integration on the merchant's side. This page tests appetite for that and
+captures end-user emails.
+
+Copy on this page is constrained by what the backend actually does. Two claims
+that read well and are false, both of which shipped once: there is no merchant
+lock (nothing restricts where a card can be spent), and there is no manual
+approval flow. The real controls are a per-agent daily limit, a per-user
+monthly limit, single use, one hour of validity, and the pre-authorization
+hold. Check a claim against the backend before putting it on the page.
 
 **Stack:** Vite · React 19 · TypeScript · Tailwind v4 · shadcn/ui · Supabase · Bun · Vercel
 

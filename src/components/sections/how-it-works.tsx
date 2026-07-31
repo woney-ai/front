@@ -3,21 +3,21 @@ import { SectionHeading } from './section-heading'
 const steps = [
   {
     step: '01',
-    title: 'You set the mandate once',
+    title: 'You authorize once',
     description:
-      'Connect a funding source and define the limits: how much, at which merchants, and the threshold above which you want the final say. It covers every purchase after that.',
+      'Connect a funding source and give each agent a daily limit. That standing authorization covers every purchase after it — you are not approving carts one by one.',
   },
   {
     step: '02',
-    title: 'The agent builds the cart',
+    title: 'The agent does the shopping',
     description:
-      'Your agent researches, compares and lands on a checkout at any ecommerce merchant — no human in the loop until it matters.',
+      'It researches, compares and reaches a checkout anywhere online. The same checkout you would use, because nothing here asks the merchant to integrate with us.',
   },
   {
     step: '03',
-    title: 'Woney mints one card',
+    title: 'Woney issues one card',
     description:
-      'A virtual card issued for that single order, locked to that merchant and that amount. It dies the moment the charge clears, and we settle against your funding source.',
+      'Your real card is held for the amount first — if it declines, no card exists and you owe nothing. What the agent gets is good for one transaction, capped, and expires within the hour.',
   },
 ]
 

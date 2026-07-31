@@ -41,11 +41,12 @@ export function Hero() {
               className="animate-rise mt-7 max-w-lg text-lg leading-relaxed text-pretty text-bone-dim"
               style={{ animationDelay: '0.16s' }}
             >
-              Woney closes the last step. We issue a{' '}
-              <span className="text-bone">single-use virtual card</span> for
-              every purchase, so your agent can check out at any ecommerce
-              merchant on your behalf — locked to one store, one amount, one
-              transaction.
+              Give your agent{' '}
+              <span className="text-bone">spending power, not your card</span>.
+              Woney issues a fresh virtual card for each purchase — good for one
+              transaction, capped at the amount, dead in an hour. It works at
+              any checkout, and no card is ever issued until the money is
+              already held on yours.
             </p>
 
             <div
