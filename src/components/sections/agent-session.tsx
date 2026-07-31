@@ -19,9 +19,14 @@ import { SectionHeading } from './section-heading'
  *
  * Every claim here has to survive someone reading the backend. There is no
  * merchant lock (`intended_merchant` is a memo, nothing restricts where a card
- * can be spent), no per-purchase cap, and no approval flow — the real controls
- * are a per-agent daily limit, a per-user monthly limit, single use, an hour of
- * validity, and a hold placed on the real card before any card is issued.
+ * can be spent), no per-purchase cap, and no approval flow. The real controls
+ * are a per-agent daily limit, a per-user monthly limit, single use, and a hold
+ * placed on the real card before any card is issued.
+ *
+ * Card lifetime is deliberately absent. `valid_until` is stored and returned,
+ * but the worker that would act on it is still being built, so a card that is
+ * never used is not currently cancelled by anything. Say nothing about expiry
+ * here until that ships.
  *
  * Two things this transcript must never imply, because neither is true:
  *

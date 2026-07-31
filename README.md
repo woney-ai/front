@@ -8,9 +8,10 @@ page tests appetite for that and captures end-user emails.
 Every capability claim here is constrained by what the backend actually does,
 and the page has already shipped three that were not true: a merchant lock
 (nothing restricts where a card can be spent — `intended_merchant` is a memo
-string), a per-purchase limit, and a manual approval flow. A fourth is stored
-but unenforced: `valid_until` is written and returned, and no worker expires
-anything, so the card's lifetime is not a promise the product currently keeps.
+string), a per-purchase limit, and a manual approval flow. A fourth is coming but not here yet: `valid_until` is
+written and returned, and the worker that will act on it is still being built,
+so an unused card is not currently cancelled by anything. Add the claim when
+the worker ships, not before.
 
 What is real: a per-agent daily limit, a per-user monthly limit, single use
 enforced in three layers, and a pre-authorization hold placed before any card
