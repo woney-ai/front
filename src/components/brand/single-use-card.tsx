@@ -167,10 +167,15 @@ export function SingleUseCard({ className }: { className?: string }) {
               </p>
             </div>
 
-            <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-4">
+            <dl className="grid grid-cols-[1fr_1fr_auto] gap-4">
               {[
-                { term: 'Merchant', value: 'northwind.shop' },
+                // `Funds` rather than `Merchant`. A merchant name on the face
+                // of a card reads as a restriction, and there is none — the
+                // card is capped and single-use, not bound to a store. What is
+                // genuinely true, and the better claim, is that the money was
+                // already authorized on the real card before this one existed.
                 { term: 'Amount', value: '$142.60' },
+                { term: 'Funds', value: 'Held' },
                 { term: 'Uses', value: isDead ? '1 / 1' : '0 / 1' },
               ].map(({ term, value }) => (
                 <div key={term} className="min-w-0">
@@ -197,7 +202,7 @@ export function SingleUseCard({ className }: { className?: string }) {
 
       <figcaption className="mt-6 flex items-center gap-2.5 text-[0.8125rem] text-bone-faint">
         <span className="h-px flex-1 bg-line" />
-        Illustrative. One card, one merchant, one amount, one use.
+        Illustrative. One card, one amount, one use.
         <span className="h-px flex-1 bg-line" />
       </figcaption>
     </figure>

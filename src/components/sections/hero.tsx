@@ -38,7 +38,11 @@ export function Hero() {
             </h1>
 
             <p
-              className="animate-rise mt-7 max-w-lg text-lg leading-relaxed text-pretty text-bone-dim"
+              // A lead, not body copy. The jump from a 92px display face
+              // straight to 18px left the eye with nowhere to land; 21px is the
+              // missing step, and it is the only paragraph on the page that
+              // gets it.
+              className="animate-rise mt-7 max-w-xl text-[1.3125rem] leading-[1.6] text-pretty text-bone-dim"
               style={{ animationDelay: '0.16s' }}
             >
               Woney closes that gap. Your agent gets a{' '}
@@ -49,7 +53,10 @@ export function Hero() {
             </p>
 
             <div
-              className="animate-rise mt-9 max-w-md"
+              // max-w-xl to match the lead above it. Three different left-column
+              // widths read as drift, not rhythm — and the input was too narrow
+              // for an address anyone actually owns.
+              className="animate-rise mt-9 max-w-xl"
               style={{ animationDelay: '0.24s' }}
             >
               <WaitlistForm />

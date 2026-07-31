@@ -68,7 +68,10 @@
     --surface: oklch(0.195 0.014 265);
     --bone: oklch(0.955 0.011 85);
     --bone-dim: oklch(0.74 0.012 265);
-    --bone-faint: oklch(0.56 0.014 265);
+    /* 5.44:1 on ink. The previous 0.56 measured 4.25:1, under the 4.5 AA floor
+       for small text — and `rule-mono` renders this colour at 12px in uppercase
+       with wide tracking, which is the worst case, not the average one. */
+    --bone-faint: oklch(0.62 0.014 265);
     --foil: oklch(0.85 0.072 82);
     --signal: oklch(0.84 0.16 152);
     --line: oklch(1 0 0 / 9%);
@@ -176,8 +179,11 @@
     }
 }
 
+/* 12px, not 11. Uppercase mono with 0.16em of tracking already costs word
+   shape; at 11px on a dark ground it was asking too much of the reader for a
+   label that appears eleven times on the first screen. */
 @utility rule-mono {
-    @apply font-mono text-[0.6875rem] tracking-[0.18em] uppercase;
+    @apply font-mono text-xs tracking-[0.16em] uppercase;
 }
 
 /* Page-load choreography: one orchestrated reveal beats scattered fidgeting. */
