@@ -153,8 +153,7 @@ export function AgentSession() {
         </div>
 
         <p className="mt-5 text-center text-[0.8125rem] text-bone-faint">
-          Illustrative session. Sample identifiers and amounts, and some
-          capabilities shown are in active development.
+          Illustrative session. Sample identifiers and amounts.
         </p>
       </div>
     </section>
