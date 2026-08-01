@@ -123,6 +123,14 @@
         outline-offset: 2px;
     }
 
+    /* The header is sticky and 3.5rem tall, so an anchor jump parks its own
+       target underneath it — the heading you asked for is the one thing you
+       cannot see. Same for anything scrolled into view by focus. */
+    :target,
+    :focus {
+        scroll-margin-top: 5.5rem;
+    }
+
     @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -182,6 +190,37 @@
 /* 12px, not 11. Uppercase mono with 0.16em of tracking already costs word
    shape; at 11px on a dark ground it was asking too much of the reader for a
    label that appears eleven times on the first screen. */
+/* Hidden until focused, then pinned over the header. Written out rather than
+   composed from `sr-only` + `focus-visible:not-sr-only`, because both set
+   `position` and which one wins depends on the order Tailwind happens to emit
+   them in — not something to leave to chance for the first stop in the tab
+   order. */
+@utility skip-link {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+
+    &:focus-visible {
+        position: fixed;
+        top: 0.75rem;
+        left: 0.75rem;
+        z-index: 60;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 0.625rem 1rem;
+        overflow: visible;
+        clip-path: none;
+        background: var(--bone);
+        color: var(--ink);
+    }
+}
+
 @utility rule-mono {
     @apply font-mono text-xs tracking-[0.16em] uppercase;
 }

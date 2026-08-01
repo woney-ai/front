@@ -10,8 +10,18 @@ import { HowItWorks } from '@/components/sections/how-it-works'
 export function App() {
   return (
     <div className="min-h-dvh bg-ink">
+      {/* First thing in the tab order, invisible until it has focus. Without
+          it a keyboard or screen-reader user walks the header on every visit
+          before reaching anything they came for. */}
+      <a
+        href="#main"
+        className="skip-link font-mono text-sm"
+      >
+        Skip to content
+      </a>
+
       <SiteHeader />
-      <main>
+      <main id="main">
         <Hero />
         <HowItWorks />
         <AgentSession />

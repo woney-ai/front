@@ -27,9 +27,12 @@ export function Audiences() {
           <div key={label}>
             <span className="rule-mono text-foil">{label}</span>
 
-            <h3 className="mt-4 font-display text-[clamp(2.05rem,3.6vw,2.5rem)] leading-[1.06] tracking-[-0.015em] text-bone">
+            {/* h2, not h3. This section has no heading above these two, so an
+                h3 would file them under the previous section's h2 — a screen
+                reader would announce them as part of Capabilities. */}
+            <h2 className="mt-4 font-display text-[clamp(2.05rem,3.6vw,2.5rem)] leading-[1.06] tracking-[-0.015em] text-bone">
               {title}
-            </h3>
+            </h2>
 
             <ul className="mt-7 space-y-0">
               {points.map((point) => (
