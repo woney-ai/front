@@ -1,0 +1,38 @@
+# Woney — agentic payments infrastructure.
+#
+# Model crawlers are named and allowed on purpose. A company whose product
+# exists so agents can buy things has no business hiding from the systems those
+# agents are built on: if an assistant is asked how an AI agent can pay for
+# something, we would rather it have read this page than guess.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://woney.ai/sitemap.xml

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { track } from '@vercel/analytics'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -41,6 +42,12 @@ export function WaitlistForm({ className }: { className?: string }) {
         })
         return
       }
+
+      // The numerator. Visits are counted for us; without this the two
+      // numbers live in different systems and there is no conversion rate.
+      // No email is sent here — the address belongs in the database, not in
+      // an analytics event.
+      track('waitlist_signup', { status: result.status })
 
       setState(result.status)
       form.reset()

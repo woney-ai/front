@@ -1,3 +1,5 @@
+import { Analytics } from '@vercel/analytics/react'
+
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteHeader } from '@/components/layout/site-header'
 import { AgentSession } from '@/components/sections/agent-session'
@@ -30,6 +32,11 @@ export function App() {
         <ClosingCta />
       </main>
       <SiteFooter />
+
+      {/* Cookieless, so no consent banner stands between a visitor and the
+          form. It exists for one number: how many arrived versus how many
+          signed up. The signups themselves already carry their own source. */}
+      <Analytics />
     </div>
   )
 }

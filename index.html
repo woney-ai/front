@@ -42,6 +42,60 @@
       content="Your agent can shop. It can't pay. Woney gives it a real way to — one that works at any checkout and is never your card."
     />
     <meta name="twitter:image" content="https://woney.ai/og.png" />
+
+    <!-- The page renders on the client, so a crawler that does not run
+         JavaScript sees an empty div. This block does not: it is static HTML,
+         it is machine-readable, and it states plainly what the product is.
+         For a company built so that agents can buy things, being legible to
+         the systems those agents run on is not a nice-to-have.
+
+         Keep this honest with the page. `featureList` describes what ships;
+         anything on the roadmap belongs in the copy, not in structured data a
+         machine will quote back as fact. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://woney.ai/#organization",
+            "name": "Woney",
+            "url": "https://woney.ai/",
+            "logo": "https://woney.ai/og.png",
+            "email": "hello@woney.ai",
+            "description": "Payments infrastructure that lets an AI agent pay for a purchase without ever holding its owner's card."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://woney.ai/#website",
+            "url": "https://woney.ai/",
+            "name": "Woney",
+            "publisher": { "@id": "https://woney.ai/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Woney",
+            "applicationCategory": "FinanceApplication",
+            "operatingSystem": "Web",
+            "url": "https://woney.ai/",
+            "publisher": { "@id": "https://woney.ai/#organization" },
+            "description": "Woney issues a virtual card for a single purchase so an AI agent can check out at any online merchant on its owner's behalf. The agent completes the merchant's normal checkout itself — nothing is required of the merchant — and never receives the owner's real card. Spending is bounded by a limit the owner sets in advance.",
+            "featureList": [
+              "A virtual card issued per purchase, valid for one transaction",
+              "Card amount capped at issuance",
+              "Works at any online checkout with no merchant integration",
+              "Per-agent spending limits set by the account owner",
+              "The owner's real card is never exposed to the agent"
+            ],
+            "audience": {
+              "@type": "Audience",
+              "audienceType": "AI agent developers and people who delegate purchases to AI assistants"
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
