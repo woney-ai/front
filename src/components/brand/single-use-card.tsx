@@ -111,13 +111,22 @@ export function SingleUseCard({ className }: { className?: string }) {
             // reflecting — which is why premium cards are finished this way.
             // The engraving now carries the surface, as a matte material
             // should: legible by texture rather than by highlight.
-            'engraving bg-[oklch(0.205_0.015_265)]',
-            // The 1px inset highlight was the specular edge and it goes. The
-            // foil bloom warms slightly and the drop shadow deepens, because
-            // against a matte face the foil is the only thing left catching
-            // light — which is the point.
-            'shadow-[0_0_70px_-10px_oklch(0.85_0.072_82/18%),0_54px_100px_-30px_oklch(0_0_0/98%)]',
-            isDead && 'opacity-50 saturate-0',
+            'engraving',
+            // Live: the 1px inset highlight was the specular edge and it goes.
+            // The foil bloom warms and the drop shadow deepens, because against
+            // a matte face the foil is the only thing left catching light.
+            //
+            // Expired: a spent card does not turn transparent, it stops being
+            // lit. `opacity-50` made the page's coarse weave show straight
+            // through the face and the object stopped reading as material at
+            // all — the one thing the matte finish exists to establish. So the
+            // face stays fully opaque and simply goes dark and colourless, the
+            // foil bloom is extinguished, and the shadow shortens because a
+            // card lying dead sits closer to the surface than one being held up
+            // to the light.
+            isDead
+              ? 'bg-[oklch(0.16_0.005_265)] saturate-0 shadow-[0_26px_50px_-30px_oklch(0_0_0/90%)]'
+              : 'bg-[oklch(0.205_0.015_265)] shadow-[0_0_70px_-10px_oklch(0.85_0.072_82/18%),0_54px_100px_-30px_oklch(0_0_0/98%)]',
           )}
           style={{
             transform: isDead
