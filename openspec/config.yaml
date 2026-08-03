@@ -1,0 +1,59 @@
+# SDD config for woney/front
+schema: spec-driven
+
+context: |
+  Woney waitlist landing: Vite 8 + React 19 + TS + Tailwind v4 + shadcn/ui.
+  Package manager: Bun. Deploy: Vercel (framework "vite").
+  Build prerenders SPA (entry-server.tsx + scripts/prerender.ts); client hydrates —
+  keep first render deterministic or hydration breaks.
+  Backend is a SEPARATE repo (agent-credit-card) using OpenSpec; align conventions.
+  Supabase backs waitlist (SQL under supabase/, edge functions under supabase/functions/).
+  Supabase MCP is READ-ONLY — DDL applied by user pasting scripts into SQL editor.
+
+persistence: hybrid
+delivery_strategy: ask-on-risk
+review_budget_lines: 400
+
+strict_tdd: false
+strict_tdd_reason: >
+  No test runner configured. No test script in package.json, no test files in repo.
+  Only automated checks today: `bun run build` (tsc -b) and `bunx oxlint src`.
+
+testing:
+  test_runner: none
+  test_layers:
+    unit: false
+    integration: false
+    e2e: false
+  coverage: false
+  quality_tools:
+    linter: "bunx oxlint src"
+    type_checker: "bun run build (tsc -b)"
+    formatter: none
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Note Supabase DDL must ship as a delta SQL script for the user to paste into the SQL editor (MCP is read-only)
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Document architecture decisions with rationale
+    - Call out any change that could break SSR prerender/hydration determinism
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing code patterns (container/presentational, shadcn/ui conventions)
+      - Match agent-credit-card repo's OpenSpec conventions where applicable
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "bun run build"
+    lint_command: "bunx oxlint src"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
