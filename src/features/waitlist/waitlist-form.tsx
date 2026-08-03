@@ -43,14 +43,20 @@ export function WaitlistForm({ className }: { className?: string }) {
         return
       }
 
-      // The numerator. Visits are counted for us; without this the two
-      // numbers live in different systems and there is no conversion rate.
-      // No email is sent here — the address belongs in the database, not in
-      // an analytics event.
-      track('waitlist_signup', { status: result.status })
-
       setState(result.status)
       form.reset()
+
+      // After the UI has committed, and in its own try. The row is already
+      // saved: if measurement fails, or an ad blocker eats it, the visitor
+      // must never be told their signup failed. Counting is our problem.
+      //
+      // No email here either — the address belongs in the database, not in an
+      // analytics event.
+      try {
+        track('waitlist_signup', { status: result.status })
+      } catch {
+        // Deliberately swallowed. A lost datapoint is not worth a false error.
+      }
     } catch {
       form.setError('email', {
         message: "We couldn't save your email. Please try again.",
