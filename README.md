@@ -36,7 +36,7 @@ policy that lets the browser client **insert only** — the list is never
 readable from the frontend.
 
 Copy the project URL and the **publishable key** (`sb_publishable_…`) from
-*Project Settings → API Keys* into `.env.local`.
+_Project Settings → API Keys_ into `.env.local`.
 
 ### About the keys
 
@@ -84,19 +84,20 @@ Setup, in order:
    records it gives you. Create an API key.
 3. Deploy the function:
    `supabase functions deploy send-waitlist-confirmation`
-4. Set its secrets (*Edge Functions → Secrets*, or `supabase secrets set`):
+4. Set its secrets (_Edge Functions → Secrets_, or `supabase secrets set`):
 
-   | Secret | Value |
-   | --- | --- |
-   | `RESEND_API_KEY` | `re_…` (Sending access is enough) |
-   | `RESEND_READ_API_KEY` | `re_…` with **Full access** — see below |
-   | `WAITLIST_FROM` | `Woney <hello@woney.ai>` |
-   | `WAITLIST_REPLY_TO` | `hello@woney.ai` (optional, this is the default) |
-   | `WAITLIST_BATCH_SIZE` | optional, default `20` |
-   | `WAITLIST_DAILY_CAP` | optional, default `95` |
-   | `WAITLIST_RECONCILE_BATCH_SIZE` | optional, default `100` |
+   | Secret                          | Value                                            |
+   | ------------------------------- | ------------------------------------------------ |
+   | `RESEND_API_KEY`                | `re_…` (Sending access is enough)                |
+   | `RESEND_READ_API_KEY`           | `re_…` with **Full access** — see below          |
+   | `WAITLIST_FROM`                 | `Woney <hello@woney.ai>`                         |
+   | `WAITLIST_REPLY_TO`             | `hello@woney.ai` (optional, this is the default) |
+   | `WAITLIST_BATCH_SIZE`           | optional, default `20`                           |
+   | `WAITLIST_DAILY_CAP`            | optional, default `95`                           |
+   | `WAITLIST_RECONCILE_BATCH_SIZE` | optional, default `100`                          |
 
    `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
+
 5. Run [`supabase/waitlist-dispatch.sql`](./supabase/waitlist-dispatch.sql)
    after pasting a secret key into the placeholder. It stores the key in
    Vault, adds the insert trigger, and schedules the sweep.
@@ -116,7 +117,7 @@ That leaves the failure invisible, so a second job closes the loop. Every
 dispatch records its `pg_net` request id, and `check_waitlist_mailer_health()`
 runs hourly to join those against the responses and raise a warning for any
 non-2xx, or for any signup left unconfirmed past 45 minutes. Both surface
-under *Logs → Postgres*. Without it a broken deploy is indistinguishable from
+under _Logs → Postgres_. Without it a broken deploy is indistinguishable from
 an empty queue — which is exactly how this pipeline once sat dead with a real
 signup waiting in it.
 
@@ -173,7 +174,7 @@ signature verification and another surface to defend.
 
 The reconciler needs its own key. Resend has no read-only permission, so
 retrieving a message requires **Full access**, while sending needs only
-*Sending access*. They stay separate: the send path runs far more often and the
+_Sending access_. They stay separate: the send path runs far more often and the
 narrow key is the one worth keeping there. A Sending-only key in
 `RESEND_READ_API_KEY` fails in the quietest possible way — mail goes out
 normally, every poll 401s, and `delivery_status` stays null forever. The health
@@ -221,7 +222,7 @@ doing the day this link gets real attention.
 Automated mail goes **out** through Resend, which signs it with DKIM on
 `woney.ai`. Human mail comes **in** through Cloudflare Email Routing, which
 forwards `hello@woney.ai` to a personal inbox; replies go back out through
-Gmail's *Send mail as*. No Google Workspace seat is needed until there are
+Gmail's _Send mail as_. No Google Workspace seat is needed until there are
 people who need mailboxes.
 
 Automated and human mail stay on separate paths on purpose. A wave of bounces

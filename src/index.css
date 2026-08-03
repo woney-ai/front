@@ -18,264 +18,264 @@
   on the one thing that matters (the card, the authorized state).
 */
 @theme inline {
-    --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
-    --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
-    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-    --font-heading: var(--font-display);
+  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-sans: 'IBM Plex Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-heading: var(--font-display);
 
-    --color-ink: var(--ink);
-    --color-ink-deep: var(--ink-deep);
-    --color-surface: var(--surface);
-    --color-bone: var(--bone);
-    --color-bone-dim: var(--bone-dim);
-    --color-bone-faint: var(--bone-faint);
-    --color-foil: var(--foil);
-    --color-signal: var(--signal);
-    --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-deep: var(--ink-deep);
+  --color-surface: var(--surface);
+  --color-bone: var(--bone);
+  --color-bone-dim: var(--bone-dim);
+  --color-bone-faint: var(--bone-faint);
+  --color-foil: var(--foil);
+  --color-signal: var(--signal);
+  --color-line: var(--line);
 
-    --color-ring: var(--ring);
-    --color-input: var(--input);
-    --color-border: var(--border);
-    --color-destructive: var(--destructive);
-    --color-accent-foreground: var(--accent-foreground);
-    --color-accent: var(--accent);
-    --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
-    --color-secondary-foreground: var(--secondary-foreground);
-    --color-secondary: var(--secondary);
-    --color-primary-foreground: var(--primary-foreground);
-    --color-primary: var(--primary);
-    --color-popover-foreground: var(--popover-foreground);
-    --color-popover: var(--popover);
-    --color-card-foreground: var(--card-foreground);
-    --color-card: var(--card);
-    --color-foreground: var(--foreground);
-    --color-background: var(--background);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
 
-    --radius-sm: calc(var(--radius) * 0.6);
-    --radius-md: calc(var(--radius) * 0.8);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) * 1.4);
-    --radius-2xl: calc(var(--radius) * 1.8);
-    --radius-3xl: calc(var(--radius) * 2.2);
-    --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root,
 .dark {
-    --ink: oklch(0.145 0.014 265);
-    --ink-deep: oklch(0.115 0.014 265);
-    --surface: oklch(0.195 0.014 265);
-    --bone: oklch(0.955 0.011 85);
-    --bone-dim: oklch(0.74 0.012 265);
-    /* 5.44:1 on ink. The previous 0.56 measured 4.25:1, under the 4.5 AA floor
+  --ink: oklch(0.145 0.014 265);
+  --ink-deep: oklch(0.115 0.014 265);
+  --surface: oklch(0.195 0.014 265);
+  --bone: oklch(0.955 0.011 85);
+  --bone-dim: oklch(0.74 0.012 265);
+  /* 5.44:1 on ink. The previous 0.56 measured 4.25:1, under the 4.5 AA floor
        for small text — and `rule-mono` renders this colour at 12px in uppercase
        with wide tracking, which is the worst case, not the average one. */
-    --bone-faint: oklch(0.62 0.014 265);
-    --foil: oklch(0.85 0.072 82);
-    --signal: oklch(0.84 0.16 152);
-    --line: oklch(1 0 0 / 9%);
+  --bone-faint: oklch(0.62 0.014 265);
+  --foil: oklch(0.85 0.072 82);
+  --signal: oklch(0.84 0.16 152);
+  --line: oklch(1 0 0 / 9%);
 
-    --radius: 0.5rem;
+  --radius: 0.5rem;
 
-    --background: var(--ink);
-    --foreground: var(--bone);
-    --card: var(--surface);
-    --card-foreground: var(--bone);
-    --popover: var(--surface);
-    --popover-foreground: var(--bone);
-    --primary: var(--bone);
-    --primary-foreground: var(--ink);
-    --secondary: var(--surface);
-    --secondary-foreground: var(--bone);
-    --muted: var(--surface);
-    --muted-foreground: var(--bone-dim);
-    --accent: var(--surface);
-    --accent-foreground: var(--bone);
-    --destructive: oklch(0.68 0.19 25);
-    --border: var(--line);
-    --input: oklch(1 0 0 / 14%);
-    --ring: oklch(1 0 0 / 30%);
+  --background: var(--ink);
+  --foreground: var(--bone);
+  --card: var(--surface);
+  --card-foreground: var(--bone);
+  --popover: var(--surface);
+  --popover-foreground: var(--bone);
+  --primary: var(--bone);
+  --primary-foreground: var(--ink);
+  --secondary: var(--surface);
+  --secondary-foreground: var(--bone);
+  --muted: var(--surface);
+  --muted-foreground: var(--bone-dim);
+  --accent: var(--surface);
+  --accent-foreground: var(--bone);
+  --destructive: oklch(0.68 0.19 25);
+  --border: var(--line);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(1 0 0 / 30%);
 }
 
 @layer base {
-    * {
-        @apply border-border;
-    }
+  * {
+    @apply border-border;
+  }
 
-    html {
-        @apply font-sans;
-        scroll-behavior: smooth;
-        -webkit-text-size-adjust: 100%;
-    }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-    body {
-        @apply bg-ink text-bone antialiased;
-    }
+  body {
+    @apply bg-ink text-bone antialiased;
+  }
 
-    ::selection {
-        background: var(--foil);
-        color: var(--ink-deep);
-    }
+  ::selection {
+    background: var(--foil);
+    color: var(--ink-deep);
+  }
 
-    :focus-visible {
-        outline: 2px solid var(--foil);
-        outline-offset: 2px;
-    }
+  :focus-visible {
+    outline: 2px solid var(--foil);
+    outline-offset: 2px;
+  }
 
-    /* The header is sticky and 3.5rem tall, so an anchor jump parks its own
+  /* The header is sticky and 3.5rem tall, so an anchor jump parks its own
        target underneath it — the heading you asked for is the one thing you
        cannot see. Same for anything scrolled into view by focus. */
-    :target,
-    :focus {
-        scroll-margin-top: 5.5rem;
-    }
+  :target,
+  :focus {
+    scroll-margin-top: 5.5rem;
+  }
 
-    @media (prefers-reduced-motion: reduce) {
-        *,
-        *::before,
-        *::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-        }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
+  }
 }
 
 @utility text-foil {
-    background: linear-gradient(
-        100deg,
-        oklch(0.72 0.06 60) 0%,
-        oklch(0.94 0.06 92) 38%,
-        oklch(0.99 0.02 95) 50%,
-        oklch(0.88 0.07 82) 64%,
-        oklch(0.68 0.07 55) 100%
-    );
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
+  background: linear-gradient(
+    100deg,
+    oklch(0.72 0.06 60) 0%,
+    oklch(0.94 0.06 92) 38%,
+    oklch(0.99 0.02 95) 50%,
+    oklch(0.88 0.07 82) 64%,
+    oklch(0.68 0.07 55) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 /* Engraved guilloché field — the fine line work on the back of a banknote. */
 @utility engraving {
-    background-image:
-        repeating-linear-gradient(
-            58deg,
-            oklch(1 0 0 / 3.5%) 0 1px,
-            transparent 1px 7px
-        ),
-        repeating-linear-gradient(
-            -58deg,
-            oklch(1 0 0 / 2.5%) 0 1px,
-            transparent 1px 7px
-        );
+  background-image:
+    repeating-linear-gradient(
+      58deg,
+      oklch(1 0 0 / 3.5%) 0 1px,
+      transparent 1px 7px
+    ),
+    repeating-linear-gradient(
+      -58deg,
+      oklch(1 0 0 / 2.5%) 0 1px,
+      transparent 1px 7px
+    );
 }
 
 /* Paper grain, so large ink fields never read as flat digital black. */
 @utility grain {
-    position: relative;
+  position: relative;
 
-    &::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        opacity: 0.32;
-        mix-blend-mode: overlay;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-    }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.32;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
 }
 
-/* 12px, not 11. Uppercase mono with 0.16em of tracking already costs word
-   shape; at 11px on a dark ground it was asking too much of the reader for a
-   label that appears eleven times on the first screen. */
 /* Hidden until focused, then pinned over the header. Written out rather than
    composed from `sr-only` + `focus-visible:not-sr-only`, because both set
    `position` and which one wins depends on the order Tailwind happens to emit
    them in — not something to leave to chance for the first stop in the tab
    order. */
 @utility skip-link {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 
-    &:focus-visible {
-        position: fixed;
-        top: 0.75rem;
-        left: 0.75rem;
-        z-index: 60;
-        width: auto;
-        height: auto;
-        margin: 0;
-        padding: 0.625rem 1rem;
-        overflow: visible;
-        clip-path: none;
-        background: var(--bone);
-        color: var(--ink);
-    }
+  &:focus-visible {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 60;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0.625rem 1rem;
+    overflow: visible;
+    clip-path: none;
+    background: var(--bone);
+    color: var(--ink);
+  }
 }
 
+/* 12px, not 11. Uppercase mono with 0.16em of tracking already costs word
+   shape; at 11px on a dark ground it was asking too much of the reader for a
+   label that appears eleven times on the first screen. */
 @utility rule-mono {
-    @apply font-mono text-xs tracking-[0.16em] uppercase;
+  @apply font-mono text-xs tracking-[0.16em] uppercase;
 }
 
 /* Page-load choreography: one orchestrated reveal beats scattered fidgeting. */
 @keyframes rise {
-    from {
-        opacity: 0;
-        transform: translateY(14px);
-    }
-    to {
-        opacity: 1;
-        transform: none;
-    }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes foil-sweep {
-    0% {
-        transform: translateX(-120%) skewX(-18deg);
-    }
-    100% {
-        transform: translateX(320%) skewX(-18deg);
-    }
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+  }
 }
 
 @keyframes seal-in {
-    0% {
-        opacity: 0;
-        transform: scale(0.86) rotate(-8deg);
-    }
-    60% {
-        transform: scale(1.04) rotate(1deg);
-    }
-    100% {
-        opacity: 1;
-        transform: none;
-    }
+  0% {
+    opacity: 0;
+    transform: scale(0.86) rotate(-8deg);
+  }
+  60% {
+    transform: scale(1.04) rotate(1deg);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes pulse-signal {
-    0%,
-    100% {
-        opacity: 1;
-        box-shadow: 0 0 0 0 oklch(0.84 0.16 152 / 45%);
-    }
-    50% {
-        opacity: 0.75;
-        box-shadow: 0 0 0 5px oklch(0.84 0.16 152 / 0%);
-    }
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 oklch(0.84 0.16 152 / 45%);
+  }
+  50% {
+    opacity: 0.75;
+    box-shadow: 0 0 0 5px oklch(0.84 0.16 152 / 0%);
+  }
 }
 
 @utility animate-rise {
-    animation: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation: rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @utility animate-seal {
-    animation: seal-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  animation: seal-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }

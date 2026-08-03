@@ -33,9 +33,15 @@ if (markup.trim().length === 0) {
   throw new Error('prerender: the server render produced nothing.')
 }
 
-await Bun.write(indexPath, html.replace(SHELL, `<div id="root">${markup}</div>`))
+await Bun.write(
+  indexPath,
+  html.replace(SHELL, `<div id="root">${markup}</div>`),
+)
 
-const words = markup.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length
+const words = markup
+  .replace(/<[^>]*>/g, ' ')
+  .split(/\s+/)
+  .filter(Boolean).length
 
 console.log(
   `prerender: injected ${markup.length} bytes, ~${words} words readable without JavaScript`,

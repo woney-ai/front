@@ -39,8 +39,8 @@ export function Capabilities() {
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <SectionHeading index="Controls" title="The card is the control.">
           Handing a model your card number is not a payments strategy. Woney
-          moves the limits into the card itself, where the network enforces
-          them — not into a prompt the agent can talk its way around.
+          moves the limits into the card itself, where the network enforces them
+          — not into a prompt the agent can talk its way around.
         </SectionHeading>
 
         <div className="mt-14 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">

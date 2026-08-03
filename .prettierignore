@@ -1,0 +1,14 @@
+dist
+dist-ssr
+bun.lock
+public/og.png
+
+# Vendored shadcn primitives: kept as generated so the CLI can update them
+# without a formatting diff on every regeneration.
+src/components/ui
+
+# Agent and skill assets are not this project's source.
+.claude
+.agents
+.atl
+openspec

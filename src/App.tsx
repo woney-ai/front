@@ -15,10 +15,7 @@ export function App() {
       {/* First thing in the tab order, invisible until it has focus. Without
           it a keyboard or screen-reader user walks the header on every visit
           before reaching anything they came for. */}
-      <a
-        href="#main"
-        className="skip-link font-mono text-sm"
-      >
+      <a href="#main" className="skip-link font-mono text-sm">
         Skip to content
       </a>
 
