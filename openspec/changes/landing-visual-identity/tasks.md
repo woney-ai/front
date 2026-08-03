@@ -69,3 +69,24 @@ Chain strategy: pending
 1. `scripts/contrast-check.ts` is a hand-rolled CDP client over Bun's WebSocket, not a thin wrapper — it materially changes the review-budget forecast versus the proposal's original estimate.
 2. Header height and `scroll-margin-top` share one CSS custom-property chain, so they must be edited in a single task to avoid an inconsistent intermediate commit.
 3. Two DPR/viewport checks (17px weave, 4.5rem header vs. 375px fold) have no automated proof and must stay flagged as human-eye verification.
+
+## Delivery decision
+
+Recorded under `ask-on-risk` when the recount straddled the 400-line budget.
+
+**`scripts/contrast-check.ts` is NOT committed.** The composited header
+measurement runs once from a scratchpad tool, and the measured ratios are
+recorded in this change's artifacts as evidence. Phase 6 changes from "write and
+ship a devtool" to "measure and record".
+
+That keeps the change at roughly 180 lines — comfortably inside budget — and
+delivers as **one PR**, no chaining.
+
+The cost is stated so nobody is surprised by it later: if the header's backdrop
+changes, the measurement has to be rebuilt rather than re-run. That is accepted
+on the grounds that a devtool with no runtime coupling, which nothing in CI
+invokes, is code someone maintains for a check that happens roughly never.
+
+Evidence requirement is unchanged: the spec still demands composited
+verification, and token-to-token ratios are still not sufficient for the header.
+Only the tool's residency changed, not the standard of proof.
