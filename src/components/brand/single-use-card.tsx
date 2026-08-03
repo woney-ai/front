@@ -6,7 +6,15 @@ import { cn } from '@/lib/utils'
 /**
  * The hero artifact: an illustrative virtual card running the real lifecycle
  * of a Woney credential — minted against a held amount, capped, authorized
- * once, then dead. Numbers here are sample data.
+ * once, then spent. Numbers here are sample data.
+ *
+ * The terminal phase is `spent`, not `expired`, and the distinction is the
+ * backend's: `CardStatus` has both `USED` and `EXPIRED`, and they mean opposite
+ * things. A card that reaches `authorized` and dies was USED — it did its job.
+ * EXPIRED is the card nobody ever used, timed out by the TTL worker, which is
+ * still being built. This sequence tells the successful story, so it must not
+ * borrow the name of the abandoned one. `Spent` also completes the arc the
+ * first phase opens: minted, locked, authorized, spent — the life of a coin.
  *
  * The merchant shown is captured data, not an enforced restriction — today
  * `intended_merchant` is recorded and forwarded, and binding the card to it is
@@ -14,15 +22,15 @@ import { cn } from '@/lib/utils'
  * card is locked to that merchant is not, until the enforcement ships.
  */
 
-type Phase = 'minting' | 'locked' | 'authorized' | 'expired'
+type Phase = 'minting' | 'locked' | 'authorized' | 'spent'
 
-const PHASE_ORDER: Phase[] = ['minting', 'locked', 'authorized', 'expired']
+const PHASE_ORDER: Phase[] = ['minting', 'locked', 'authorized', 'spent']
 
 const PHASE_DURATION: Record<Phase, number> = {
   minting: 1500,
   locked: 1700,
   authorized: 2400,
-  expired: 1900,
+  spent: 1900,
 }
 
 const SAMPLE_NUMBER = '5412 7799 0031 4408'
@@ -32,7 +40,7 @@ const STATUS_LABEL: Record<Phase, string> = {
   minting: 'Minting',
   locked: 'Locked',
   authorized: 'Authorized',
-  expired: 'Expired',
+  spent: 'Spent',
 }
 
 function scramble(template: string): string {
@@ -81,13 +89,13 @@ export function SingleUseCard({ className }: { className?: string }) {
     return () => window.clearInterval(ticker)
   }, [phase])
 
-  const isDead = phase === 'expired'
+  const isDead = phase === 'spent'
   const isAuthorized = phase === 'authorized'
 
   return (
     <figure
       className={cn('w-full max-w-[29rem] select-none', className)}
-      aria-label="Illustration of a Woney single-use card being minted against a held amount, capped to that amount, authorized once, then expiring."
+      aria-label="Illustration of a Woney single-use card being minted against a held amount, capped to that amount, authorized once, then spent and void."
     >
       <div className="relative" style={{ perspective: '1400px' }} aria-hidden>
         <div
@@ -116,7 +124,7 @@ export function SingleUseCard({ className }: { className?: string }) {
             // The foil bloom warms and the drop shadow deepens, because against
             // a matte face the foil is the only thing left catching light.
             //
-            // Expired: a spent card does not turn transparent, it stops being
+            // Spent: a spent card does not turn transparent, it stops being
             // lit. `opacity-50` made the page's coarse weave show straight
             // through the face and the object stopped reading as material at
             // all — the one thing the matte finish exists to establish. So the
