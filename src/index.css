@@ -63,6 +63,16 @@
 
 :root,
 .dark {
+  /* Instrument Serif is weight-400-only and very high contrast; below 2rem the
+     stems break up. This is the floor, and it is the rendered size — not a
+     minimum some caller is trusted to exceed. */
+  --wordmark-size: 2rem;
+  /* Breathing room above and below the wordmark's line box. */
+  --header-pad-y: 1.25rem;
+  --header-h: calc(var(--wordmark-size) + 2 * var(--header-pad-y));
+  /* Shared by `engraving` (card) and `engraving-field` (page) — same stock. */
+  --engraving-angle: 58deg;
+
   --ink: oklch(0.145 0.014 265);
   --ink-deep: oklch(0.115 0.014 265);
   --surface: oklch(0.195 0.014 265);
@@ -123,12 +133,15 @@
     outline-offset: 2px;
   }
 
-  /* The header is sticky and 3.5rem tall, so an anchor jump parks its own
-       target underneath it — the heading you asked for is the one thing you
-       cannot see. Same for anything scrolled into view by focus. */
+  /* The header is sticky and derives its height from `--header-h`, so an
+       anchor jump parks its own target underneath it — the heading you asked
+       for is the one thing you cannot see. Same for anything scrolled into
+       view by focus. The clearance below is the `2rem` this relationship
+       already encoded against the old fixed `h-14`; now it tracks
+       `--header-h` instead of being a second number held in sync by comment. */
   :target,
   :focus {
-    scroll-margin-top: 5.5rem;
+    scroll-margin-top: calc(var(--header-h) + 2rem);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -141,6 +154,15 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* The floor for any `font-display` brand mark. Reads `--wordmark-size`, never
+   a literal — the size cannot be lowered without editing this utility. */
+@utility text-wordmark {
+  font-family: var(--font-display);
+  font-size: var(--wordmark-size);
+  line-height: 1;
+  letter-spacing: -0.01em;
 }
 
 @utility text-foil {
@@ -161,14 +183,34 @@
 @utility engraving {
   background-image:
     repeating-linear-gradient(
-      58deg,
+      var(--engraving-angle),
       oklch(1 0 0 / 3.5%) 0 1px,
       transparent 1px 7px
     ),
     repeating-linear-gradient(
-      -58deg,
+      calc(var(--engraving-angle) * -1),
       oklch(1 0 0 / 2.5%) 0 1px,
       transparent 1px 7px
+    );
+}
+
+/* Coarse paper field for the page (vs. the card's fine security print).
+   Same angle as `engraving`, different pitch — 17px period / 1.5px line
+   restores the local contrast that opacity-dimming the fine weave loses. A
+   second closed utility, not a parameterised one: any caller inventing a
+   pitch is the exact "any number is expressible" failure `Wordmark` exists
+   to close, applied to texture. */
+@utility engraving-field {
+  background-image:
+    repeating-linear-gradient(
+      var(--engraving-angle),
+      oklch(1 0 0 / 3.5%) 0 1.5px,
+      transparent 1.5px 17px
+    ),
+    repeating-linear-gradient(
+      calc(var(--engraving-angle) * -1),
+      oklch(1 0 0 / 2.5%) 0 1.5px,
+      transparent 1.5px 17px
     );
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { Wordmark } from '@/components/brand/wordmark'
 import { cn } from '@/lib/utils'
 
 /**
@@ -126,9 +127,7 @@ export function SingleUseCard({ className }: { className?: string }) {
 
           <div className="relative flex h-full flex-col justify-between">
             <div className="flex items-start justify-between">
-              <span className="font-display text-xl leading-none tracking-tight text-bone">
-                woney
-              </span>
+              <Wordmark variant="card" />
 
               <span
                 className={cn(

@@ -15,7 +15,7 @@ export function SectionHeading({
 }) {
   return (
     <div className={cn('max-w-xl', className)}>
-      <span className="rule-mono text-bone-faint">{index}</span>
+      <span className="rule-mono text-bone-dim">{index}</span>
 
       <h2 className="mt-4 font-display text-[clamp(2.35rem,4.6vw,3.1rem)] leading-[1.04] tracking-[-0.015em] text-balance text-bone">
         {title}

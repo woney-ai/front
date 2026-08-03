@@ -4,7 +4,7 @@ export function ClosingCta() {
   return (
     <section className="grain relative border-t border-line">
       <div
-        className="engraving pointer-events-none absolute inset-0 opacity-70"
+        className="engraving-field pointer-events-none absolute inset-0"
         aria-hidden
       />
       <div

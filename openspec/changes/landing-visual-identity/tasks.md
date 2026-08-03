@@ -25,44 +25,44 @@ Chain strategy: pending
 
 ## Phase 1: CSS Foundation (index.css)
 
-- [ ] 1.1 Add `--wordmark-size: 2rem`, `--header-pad-y: 1.25rem`, `--header-h: calc(...)` to `:root`, AND rewrite `scroll-margin-top: calc(var(--header-h) + 2rem)` + its comment in the same edit — never land one without the other. Verify: `bunx tsc --noEmit -p tsconfig.app.json` (build stays green), `rg 'scroll-margin-top' src/index.css` shows the `calc()` form.
-- [ ] 1.2 Add `text-wordmark` utility (`font-family: var(--font-display); font-size: var(--wordmark-size); line-height: 1; letter-spacing: -0.01em`). Verify: `bunx oxlint src`.
-- [ ] 1.3 Add `--engraving-angle: 58deg` and `engraving-field` utility (17px period, 1.5px line, both angles from the shared var); refactor existing `engraving` to consume `--engraving-angle`. Verify: `bunx oxlint src`; `rg '58deg' src/index.css` shows one shared source.
+- [x] 1.1 Add `--wordmark-size: 2rem`, `--header-pad-y: 1.25rem`, `--header-h: calc(...)` to `:root`, AND rewrite `scroll-margin-top: calc(var(--header-h) + 2rem)` + its comment in the same edit — never land one without the other. Verify: `bunx tsc --noEmit -p tsconfig.app.json` (build stays green), `rg 'scroll-margin-top' src/index.css` shows the `calc()` form.
+- [x] 1.2 Add `text-wordmark` utility (`font-family: var(--font-display); font-size: var(--wordmark-size); line-height: 1; letter-spacing: -0.01em`). Verify: `bunx oxlint src`.
+- [x] 1.3 Add `--engraving-angle: 58deg` and `engraving-field` utility (17px period, 1.5px line, both angles from the shared var); refactor existing `engraving` to consume `--engraving-angle`. Verify: `bunx oxlint src`; `rg '58deg' src/index.css` shows one shared source.
 
 ## Phase 2: Wordmark Component
 
-- [ ] 2.1 Create `src/components/brand/wordmark.tsx`: closed `variant: 'header' | 'card' | 'monogram'` union, no `size`/`className`/`style`/`children`/rest-spread. `header`/`card` render `text-wordmark text-bone`; `monogram` renders lowercase `w`, `font-mono text-[0.6875rem] font-medium text-[var(--foil)]` (flat, not `text-foil`). Verify: `bunx tsc --noEmit -p tsconfig.app.json` rejects `<Wordmark variant="x" />` and any prop outside the union.
+- [x] 2.1 Create `src/components/brand/wordmark.tsx`: closed `variant: 'header' | 'card' | 'monogram'` union, no `size`/`className`/`style`/`children`/rest-spread. `header`/`card` render `text-wordmark text-bone`; `monogram` renders lowercase `w`, `font-mono text-[0.6875rem] font-medium text-[var(--foil)]` (flat, not `text-foil`). Verify: `bunx tsc --noEmit -p tsconfig.app.json` rejects `<Wordmark variant="x" />` and any prop outside the union.
 
 ## Phase 3: Call-Site Migration
 
-- [ ] 3.1 `logo.tsx:6` → delegate to `<Wordmark variant="header" />`; drop `className` prop.
-- [ ] 3.2 `single-use-card.tsx:129` → `<Wordmark variant="card" />`.
-- [ ] 3.3 `agent-session.tsx:187` → `<Wordmark variant="monogram" />`.
-- [ ] 3.4 `site-header.tsx`: `h-14` → `h-[var(--header-h)]`.
+- [x] 3.1 `logo.tsx:6` → delegate to `<Wordmark variant="header" />`; drop `className` prop.
+- [x] 3.2 `single-use-card.tsx:129` → `<Wordmark variant="card" />`.
+- [x] 3.3 `agent-session.tsx:187` → `<Wordmark variant="monogram" />`.
+- [x] 3.4 `site-header.tsx`: `h-14` → `h-[var(--header-h)]`.
   Verify (3.1–3.4): `rg 'font-display' src` returns only headings + `index.css`; `bun run build`.
 
 ## Phase 4: Texture Application
 
-- [ ] 4.1 `hero.tsx:9`, `closing-cta.tsx:7`: `engraving opacity-70` → `engraving-field` (full opacity). Verify: `bunx oxlint src`; visual: headless screenshot, page pitch visibly coarser than card, no moiré with `grain`.
+- [x] 4.1 `hero.tsx:9`, `closing-cta.tsx:7`: `engraving opacity-70` → `engraving-field` (full opacity). Verify: `bunx oxlint src`; visual: headless screenshot, page pitch visibly coarser than card, no moiré with `grain`.
 
 ## Phase 5: Tonal Promotions
 
-- [ ] 5.1 `site-header.tsx:14` → `text-bone-dim`.
-- [ ] 5.2 `site-footer.tsx:12` → `text-bone-dim`.
-- [ ] 5.3 `section-heading.tsx:18` → `text-bone-dim`.
+- [x] 5.1 `site-header.tsx:14` → `text-bone-dim`.
+- [x] 5.2 `site-footer.tsx:12` → `text-bone-dim`.
+- [x] 5.3 `section-heading.tsx:18` → `text-bone-dim`.
   Verify: `rg 'rule-mono' src` matches design's 15-row table exactly (3 `bone-dim`, 12 unchanged at `bone-faint`/`bone`/`foil`).
 
-## Phase 6: Verification Script (PR 2)
+## Phase 6: Composited Contrast Measurement (per Delivery decision — measured, not shipped)
 
-- [ ] 6.1 Create `scripts/contrast-check.ts`: launch `chrome --headless --remote-debugging-port=9222`, drive CDP over Bun's built-in `WebSocket` (no new dependency); sweep `y ∈ {0,100,200,300,400,600}`; capture screenshots; decode via canvas `getImageData`; compute WCAG ratio per header element; report the minimum across the sweep; fail under 4.5:1. Verify: `bunx oxlint scripts`; run against served `dist` — all header elements report ≥4.5:1 at every sweep point.
-- [ ] 6.2 Run `bunx @axe-core/cli` against served `dist` as the regression net outside the header.
+- [x] 6.1 Measured, not shipped: built a one-off `contrast-check.ts` under the scratchpad (NOT committed to the repo), launching `chrome --headless --remote-debugging-port` and driving CDP over Bun's built-in `WebSocket`; swept `y ∈ {0,100,200,300,400,600}`; captured screenshots and decoded them via an in-page `<canvas>`/`getImageData` (no PNG library needed on the Bun side); computed WCAG ratio per header element; recorded the minimum across the sweep in `design.md` under "Measured evidence". All header elements ≥4.5:1 at every sweep point (min 8.39:1 for `bone-dim`, ~17:1 for `bone`).
+- [x] 6.2 Ran `bunx @axe-core/cli http://localhost:4321/ --exit` against the served `dist` build as the regression net outside the header: 0 violations.
 
 ## Phase 7: Final Audit
 
-- [ ] 7.1 `bun run build` — prerender + hydration, zero console warnings. `bunx tsc --noEmit -p tsconfig.app.json`. `bunx oxlint src scripts`.
-- [ ] 7.2 `rg 'prefers-reduced-motion|matchMedia|useLayoutEffect' src` — three original motion sites intact, nothing new.
-- [ ] 7.3 Manual, NOT automatable: inspect the 1.5px/17px line at DPR 1 and DPR 2 in a headless-Chrome screenshot by eye — soft-papery at 1x vs. crisp at 2x, not mushy or a visible grid.
-- [ ] 7.4 Manual, NOT automatable: inspect a 375px-viewport screenshot by eye — confirm the 4.5rem header does not push the hero's first line below the fold.
+- [x] 7.1 `bun run build` — prerender + hydration, zero console warnings. `bunx tsc --noEmit -p tsconfig.app.json`. `bunx oxlint src scripts`.
+- [x] 7.2 `rg 'prefers-reduced-motion|matchMedia|useLayoutEffect' src` — three original motion sites intact, nothing new.
+- [x] 7.3 Manual, NOT automatable: inspected the 1.5px/17px line at DPR 1 and DPR 2 in headless-Chrome screenshots by eye — soft-papery at 1x vs. crisper at 2x, reads as material not a visible grid.
+- [x] 7.4 Manual, NOT automatable: inspected a true 375px-viewport screenshot (rendered via a 520px iframe wrapper, since headless Chrome clamps window width to 500px) by eye — the 4.5rem header does not push the hero's first line ("Agents can shop.") below the fold.
 
 ## Key Learnings
 

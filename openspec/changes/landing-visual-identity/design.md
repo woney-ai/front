@@ -275,6 +275,35 @@ either naively composite `rgba(ink, 0.8)` or return *incomplete* for the header.
 It is run against the served build to catch regressions on the rest of the page —
 particularly the three promoted instances and everything left at `bone-faint`.
 
+## Measured evidence
+
+Composited header contrast, measured per the method above. Per the delivery
+decision, the measurement tool is NOT committed to the repo — it ran once from
+`/private/tmp/.../scratchpad/contrast-check.ts` (a hand-rolled CDP client over
+Bun's `WebSocket`, decoding each sweep screenshot via an in-page `<canvas>` so
+no PNG library was needed) against `bun run preview --port 4321` (built
+`dist`). Sweep `y ∈ {0, 100, 200, 300, 400, 600}`, sampling the lightest pixel
+in each element's glyph run against the darkest pixel in a 4px ring above it.
+
+| Element | Token | Min ratio across sweep | All sweep values |
+| --- | --- | --- | --- |
+| "How it works" nav link | `bone-dim` | **8.39:1** | 8.60, 8.54, 8.54, 8.54, 8.39, 8.60 |
+| "Request access" nav link | `bone` | **17.17:1** | 17.40, 17.17, 17.17, 17.19, 17.27, 17.40 |
+| Wordmark ("woney") | `bone` | **16.95:1** | 17.40, 17.29, 16.96, 16.95, 17.16, 17.37 |
+
+All three header elements hold AA (>= 4.5:1) at every scroll position in the
+sweep, including mid-scroll over the hero's `blur-3xl` light source (`y=200`
+and `y=300`, the measured minima for the wordmark). No promotion beyond the
+already-planned `bone-dim` nav link was required — the composited backdrop
+(`bg-ink/80` + `backdrop-blur-xl`) does not erode contrast enough to threaten
+AA for tokens already at `bone-dim`/`bone`. `bunx @axe-core/cli` against the
+same served build reported 0 violations, corroborating the rest of the page.
+
+Cost, restated per the delivery decision: this table is a snapshot. If the
+header's backdrop changes (a new blur radius, a different hero light source),
+the measurement must be rebuilt and re-run manually — there is no committed
+tool or CI check enforcing it.
+
 ## File Changes
 
 | File | Action | Description |

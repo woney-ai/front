@@ -7,6 +7,7 @@ import {
   X,
 } from 'lucide-react'
 
+import { Wordmark } from '@/components/brand/wordmark'
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
 import { cn } from '@/lib/utils'
 
@@ -184,7 +185,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
     return (
       <div className="flex gap-3.5">
         <Avatar className="border-foil/30 bg-foil/10">
-          <span className="font-display text-sm leading-none text-foil">w</span>
+          <Wordmark variant="monogram" />
         </Avatar>
         <p className="pt-0.5 text-[0.9375rem] leading-relaxed text-bone-dim">
           {entry.text}

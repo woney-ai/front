@@ -6,7 +6,7 @@ export function Hero() {
     <section id="waitlist" className="grain relative overflow-hidden">
       {/* Engraved field + a single light source, high and left of the card */}
       <div
-        className="engraving pointer-events-none absolute inset-0 opacity-70"
+        className="engraving-field pointer-events-none absolute inset-0"
         aria-hidden
       />
       <div
