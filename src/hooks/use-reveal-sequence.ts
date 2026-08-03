@@ -1,27 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 
 /**
- * Reveals `total` items one at a time, but only once the element has actually
- * scrolled into view — so the transcript plays for the reader instead of
- * finishing while they are still up in the hero.
+ * Staggers a list into view once the element has scrolled to, so the transcript
+ * plays for the reader instead of finishing while they are still in the hero.
+ *
+ * It returns a boolean, not a count, and that is the whole design. The previous
+ * version returned how many items to show and the caller sliced its array by
+ * it — which meant the server rendered ZERO of them. The entire transcript was
+ * missing from the prerendered HTML, so the one section that explains the
+ * product to a machine was invisible to any crawler that does not run
+ * JavaScript, which is exactly what the prerender exists to prevent.
+ *
+ * Now every item is always in the DOM and CSS does the staggering. Content is
+ * never hostage to an animation.
+ *
+ * `started` is false on the server and on the client's first render, so the two
+ * agree and there is nothing to hydrate wrong. Only an effect turns it true,
+ * which also means no-JS leaves every item plainly visible — the behaviour that
+ * matters most here.
  */
-export function useRevealSequence(total: number, stepMs = 460) {
+export function useRevealSequence() {
   const ref = useRef<HTMLDivElement>(null)
-  const [revealed, setRevealed] = useState(0)
+  const [started, setStarted] = useState(false)
 
   useEffect(() => {
     const node = ref.current
     if (!node) return
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      setRevealed(total)
-      return
-    }
+    // Reduced motion never starts the sequence: the items simply stay as they
+    // already are, which is visible.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setRevealed(1)
+          setStarted(true)
           observer.disconnect()
         }
       },
@@ -30,14 +43,7 @@ export function useRevealSequence(total: number, stepMs = 460) {
 
     observer.observe(node)
     return () => observer.disconnect()
-  }, [total])
+  }, [])
 
-  useEffect(() => {
-    if (revealed === 0 || revealed >= total) return
-
-    const timer = window.setTimeout(() => setRevealed((n) => n + 1), stepMs)
-    return () => window.clearTimeout(timer)
-  }, [revealed, total, stepMs])
-
-  return { ref, revealed, done: revealed >= total }
+  return { ref, started }
 }

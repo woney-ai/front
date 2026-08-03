@@ -13,9 +13,13 @@ export function SiteFooter() {
           >
             hello@woney.ai
           </a>
-          <span className="rule-mono text-bone-faint">
-            © {new Date().getFullYear()} Woney
-          </span>
+          {/* A fixed year, not `new Date().getFullYear()`. The build
+              prerenders, so a live year is evaluated once at build time, baked
+              into the static HTML, and then recomputed by the client on every
+              load — which means every visit after 1 January is a hydration
+              mismatch until someone redeploys. A copyright notice is also just
+              the year of publication; it does not need to track the calendar. */}
+          <span className="rule-mono text-bone-faint">© 2026 Woney</span>
         </div>
       </div>
     </footer>

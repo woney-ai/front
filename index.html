@@ -104,6 +104,34 @@
     </script>
   </head>
   <body>
+    <!-- The page is prerendered, so without JavaScript a visitor now sees a
+         complete landing page whose form quietly does nothing on submit — the
+         markup is there, the handler is not. Before prerendering they saw an
+         empty div and knew. Turning an obvious failure into a silent one is
+         worse than either, so say it plainly instead. -->
+    <noscript>
+      <div
+        style="
+          position: fixed;
+          inset: 0 0 auto 0;
+          z-index: 100;
+          background: #f3f0e8;
+          color: #070a10;
+          padding: 0.875rem 1.25rem;
+          font:
+            500 0.875rem/1.5 ui-monospace,
+            monospace;
+          text-align: center;
+        "
+      >
+        This page needs JavaScript to take your email. Enable it, or write to
+        <a href="mailto:hello@woney.ai" style="color: inherit"
+          >hello@woney.ai</a
+        >
+        and we will add you by hand.
+      </div>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

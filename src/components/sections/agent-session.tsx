@@ -41,8 +41,8 @@ import { SectionHeading } from './section-heading'
  *   which is theirs, not ours. Hence the `store` step: it is the agent
  *   labouring at a normal checkout, with no Woney in the loop.
  *
- * The transcript deliberately ends on a decline: autonomy inside the
- * mandate, a hard stop outside it.
+ * The transcript deliberately ends on a decline: autonomy inside the limit,
+ * a hard stop outside it.
  */
 
 type Entry =
@@ -120,7 +120,7 @@ function formatArgs(args: Record<string, string | number>): string {
 }
 
 export function AgentSession() {
-  const { ref, revealed } = useRevealSequence(TRANSCRIPT.length)
+  const { ref, started } = useRevealSequence()
 
   return (
     <section id="agent-session" className="border-t border-line">
@@ -147,11 +147,20 @@ export function AgentSession() {
             </span>
           </div>
 
-          <ol className="divide-y divide-line">
-            {TRANSCRIPT.slice(0, revealed).map((entry, index) => (
+          {/* Every entry is always rendered. The stagger is CSS, driven off
+              `data-sequenced`, so the transcript exists in the prerendered HTML
+              and for anyone without JavaScript. It used to be sliced by a
+              counter that is zero on the server, which hid this entire section
+              from exactly the machines it was written for. */}
+          <ol
+            className="divide-y divide-line"
+            data-sequenced={started || undefined}
+          >
+            {TRANSCRIPT.map((entry, index) => (
               <li
                 key={index}
-                className="animate-rise px-5 py-4 sm:px-7 sm:py-5"
+                className="reveal-step px-5 py-4 sm:px-7 sm:py-5"
+                style={{ '--step': index } as React.CSSProperties}
               >
                 <TranscriptEntry entry={entry} />
               </li>

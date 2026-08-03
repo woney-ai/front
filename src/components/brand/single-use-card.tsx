@@ -16,10 +16,16 @@ import { cn } from '@/lib/utils'
  * borrow the name of the abandoned one. `Spent` also completes the arc the
  * first phase opens: minted, locked, authorized, spent — the life of a coin.
  *
- * The merchant shown is captured data, not an enforced restriction — today
- * `intended_merchant` is recorded and forwarded, and binding the card to it is
- * on the MVP path. Displaying it is fine and deliberate. Prose asserting the
- * card is locked to that merchant is not, until the enforcement ships.
+ * The merchant shown is captured data — today `intended_merchant` is recorded
+ * and forwarded, and binding the card to it is on the MVP build path.
+ *
+ * The line this codebase draws, and it is the owner's: this page may show the
+ * product being built, so a roadmap capability like the merchant lock is
+ * allowed to appear in the illustrative artifacts. What is never allowed is a
+ * capability nobody intends to build. Prose OUTSIDE the artifacts — the hero,
+ * how-it-works, audiences, the meta description, the JSON-LD — states only what
+ * ships today, because that is where a reader takes a claim as fact rather than
+ * as a demo.
  */
 
 type Phase = 'minting' | 'locked' | 'authorized' | 'spent'

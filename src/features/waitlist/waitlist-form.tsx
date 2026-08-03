@@ -58,6 +58,17 @@ export function WaitlistForm({ className }: { className?: string }) {
         // Deliberately swallowed. A lost datapoint is not worth a false error.
       }
     } catch {
+      // The failure path counts too. Without this, a form that breaks for
+      // everyone — bad env var, Supabase down, a changed RLS policy — produces
+      // exactly the same analytics as a quiet day: no events. Silence would
+      // mean both "nobody came" and "nobody can sign up".
+      try {
+        track('waitlist_signup_failed')
+      } catch {
+        // Same reasoning as the success path: measurement never worsens the
+        // visitor's experience.
+      }
+
       form.setError('email', {
         message: "We couldn't save your email. Please try again.",
       })

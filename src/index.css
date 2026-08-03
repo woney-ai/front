@@ -263,6 +263,17 @@
 /* 12px, not 11. Uppercase mono with 0.16em of tracking already costs word
    shape; at 11px on a dark ground it was asking too much of the reader for a
    label that appears eleven times on the first screen. */
+/* A staggered reveal that never withholds content. Items are visible by
+   default — that is what the server renders and what anyone without JavaScript
+   keeps — and the animation only applies once an effect marks the list
+   `data-sequenced`, replaying each row from below with a per-index delay. */
+@utility reveal-step {
+  [data-sequenced] > & {
+    animation: rise 0.5s ease-out both;
+    animation-delay: calc(var(--step, 0) * 0.11s);
+  }
+}
+
 @utility rule-mono {
   @apply font-mono text-xs tracking-[0.16em] uppercase;
 }
