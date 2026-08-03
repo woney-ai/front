@@ -231,6 +231,19 @@ to customers and investors. Sending bulk mail from Gmail is also against
 Google's terms, and exceeding its limits suspends Gmail access for the whole
 account, not just the send.
 
+## Branching
+
+Right now everything lands on `main`. That is deliberate while the site has
+never been served to anyone: with no production to protect, a branch-and-PR
+ceremony costs review latency and buys nothing.
+
+**That changes the day this deploys.** Once the site is live, `main` becomes the
+released state, `develop` becomes the integration branch, and every change goes
+through its own `type/description` branch and a PR into `develop`.
+
+The trigger is the first Vercel deploy, not a date. If you are reading this and
+the site is public, the flow above is already overdue.
+
 ## Deploy (Vercel)
 
 Import the repo. `vercel.json` already sets the Bun install/build commands.
