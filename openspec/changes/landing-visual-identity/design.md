@@ -292,12 +292,37 @@ in each element's glyph run against the darkest pixel in a 4px ring above it.
 | Wordmark ("woney") | `bone` | **16.95:1** | 17.40, 17.29, 16.96, 16.95, 17.16, 17.37 |
 
 All three header elements hold AA (>= 4.5:1) at every scroll position in the
-sweep, including mid-scroll over the hero's `blur-3xl` light source (`y=200`
-and `y=300`, the measured minima for the wordmark). No promotion beyond the
-already-planned `bone-dim` nav link was required — the composited backdrop
-(`bg-ink/80` + `backdrop-blur-xl`) does not erode contrast enough to threaten
-AA for tokens already at `bone-dim`/`bone`. `bunx @axe-core/cli` against the
-same served build reported 0 violations, corroborating the rest of the page.
+sweep. No promotion beyond the already-planned `bone-dim` nav link was required
+— the composited backdrop (`bg-ink/80` + `backdrop-blur-xl`) does not erode
+contrast enough to threaten AA for tokens already at `bone-dim`/`bone`.
+`bunx @axe-core/cli` against the same served build reported 0 violations,
+corroborating the rest of the page.
+
+### Correction: the sweep did not sample the worst case
+
+The verification phase computed the hero radial's peak from its own geometry
+(`-top-64`, `h-[46rem]`) and put it near document `y≈184` — between the sweep's
+`y=100` and `y=200` samples. Six discrete points do not establish a worst case,
+and the original wording here claimed they did.
+
+Re-measured at and around the peak (`y ∈ {150, 170, 184, 200, 220}`), sampling
+the composited backdrop beside each element and computing against the token
+colours:
+
+| Element | Token | At the peak |
+| --- | --- | --- |
+| "How it works" nav link | `bone-dim` | **8.00:1** |
+| "Request access" nav link | `bone` | 16.18:1 |
+| Wordmark | `bone` | 16.18:1 |
+
+Lightest composited backdrop across the peak window: `rgb(18, 20, 25)`.
+
+The conclusion survives — 8.00:1 is 1.78x the AA floor — but it is now measured
+at the peak rather than inferred from either side of it. Worth recording that
+the first attempt at this re-measurement produced ratios near 1.00:1, because
+it read `getComputedStyle().color` with an `rgb()`-shaped regex while these
+tokens serialise as `oklch`. Absurd output caught it; a plausible-but-wrong
+number would not have been.
 
 Cost, restated per the delivery decision: this table is a snapshot. If the
 header's backdrop changes (a new blur radius, a different hero light source),
