@@ -5,7 +5,10 @@ export function Hero() {
   return (
     <section id="waitlist" className="grain relative overflow-hidden">
       {/* Engraved field + a single light source, high and left of the card */}
-      <div className="engraving pointer-events-none absolute inset-0 opacity-70" aria-hidden />
+      <div
+        className="engraving pointer-events-none absolute inset-0 opacity-70"
+        aria-hidden
+      />
       <div
         className="pointer-events-none absolute -top-64 right-[-10%] h-[46rem] w-[46rem] rounded-full opacity-60 blur-3xl"
         style={{
@@ -46,10 +49,8 @@ export function Hero() {
               style={{ animationDelay: '0.16s' }}
             >
               Woney closes that gap. Your agent gets a{' '}
-              <span className="text-bone">real way to pay</span> — one that
-              works at any checkout, asks nothing of the merchant, and is never
-              your actual card. You decide what it can spend. It handles the
-              rest.
+              <span className="text-bone">real way to pay</span>. You decide
+              what it can spend. It handles the rest.
             </p>
 
             <div

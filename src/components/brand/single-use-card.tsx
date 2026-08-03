@@ -57,7 +57,8 @@ export function SingleUseCard({ className }: { className?: string }) {
     }
 
     const timer = window.setTimeout(() => {
-      const next = PHASE_ORDER[(PHASE_ORDER.indexOf(phase) + 1) % PHASE_ORDER.length]
+      const next =
+        PHASE_ORDER[(PHASE_ORDER.indexOf(phase) + 1) % PHASE_ORDER.length]
       setPhase(next)
     }, PHASE_DURATION[phase])
 
@@ -87,11 +88,7 @@ export function SingleUseCard({ className }: { className?: string }) {
       className={cn('w-full max-w-[29rem] select-none', className)}
       aria-label="Illustration of a Woney single-use card being minted against a held amount, capped to that amount, authorized once, then expiring."
     >
-      <div
-        className="relative"
-        style={{ perspective: '1400px' }}
-        aria-hidden
-      >
+      <div className="relative" style={{ perspective: '1400px' }} aria-hidden>
         <div
           className={cn(
             'relative aspect-[1.586] overflow-hidden rounded-[1.15rem] p-7 transition-all duration-700 ease-out',
@@ -206,7 +203,7 @@ export function SingleUseCard({ className }: { className?: string }) {
 
       <figcaption className="mt-6 flex items-center gap-2.5 text-[0.8125rem] text-bone-faint">
         <span className="h-px flex-1 bg-line" />
-        Illustrative. One card, one merchant, one amount, one use.
+        One card, one merchant, one amount, one use.
         <span className="h-px flex-1 bg-line" />
       </figcaption>
     </figure>

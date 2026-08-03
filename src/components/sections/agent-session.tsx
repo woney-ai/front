@@ -124,7 +124,10 @@ export function AgentSession() {
   return (
     <section id="agent-session" className="border-t border-line">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
-        <SectionHeading index="In the agent" title="The card, not the checkout.">
+        <SectionHeading
+          index="In the agent"
+          title="The card, not the checkout."
+        >
           Your agent still does the buying. It works through the merchant's
           checkout the way a person would, because that is the same checkout
           everyone gets. What it never gets is your card — it asks for one that
@@ -145,7 +148,10 @@ export function AgentSession() {
 
           <ol className="divide-y divide-line">
             {TRANSCRIPT.slice(0, revealed).map((entry, index) => (
-              <li key={index} className="animate-rise px-5 py-4 sm:px-7 sm:py-5">
+              <li
+                key={index}
+                className="animate-rise px-5 py-4 sm:px-7 sm:py-5"
+              >
                 <TranscriptEntry entry={entry} />
               </li>
             ))}
@@ -153,7 +159,7 @@ export function AgentSession() {
         </div>
 
         <p className="mt-5 text-center text-[0.8125rem] text-bone-faint">
-          Illustrative session. Sample identifiers and amounts.
+          Sample identifiers and amounts.
         </p>
       </div>
     </section>
