@@ -93,8 +93,30 @@ export function SingleUseCard({ className }: { className?: string }) {
         <div
           className={cn(
             'relative aspect-[1.586] overflow-hidden rounded-[1.15rem] p-7 transition-all duration-700 ease-out',
-            'engraving bg-gradient-to-br from-[oklch(0.27_0.017_265)] via-[oklch(0.2_0.015_265)] to-[oklch(0.15_0.014_265)]',
-            'shadow-[0_1px_0_0_oklch(1_0_0/14%)_inset,0_0_60px_-12px_oklch(0.85_0.072_82/14%),0_50px_90px_-32px_oklch(0_0_0/95%)]',
+            // The face is a background-COLOR, not a gradient, and that is both
+            // the finish and a bug fix.
+            //
+            // It previously carried `bg-gradient-to-br from/via/to`, which set
+            // `background-image` — the same property `engraving` sets. The
+            // utility won the cascade and the face gradient never rendered at
+            // all. What looked like a card surface was the page showing
+            // through, plus the engraving lines, plus the shadow and foil edge.
+            // Editing those colour stops changed nothing, which is how this
+            // was found.
+            //
+            // Matte is the right answer to that anyway. What reads as plastic
+            // is specular VARIANCE, not darkness: the dead gradient swept 0.27
+            // to 0.15, and a ramp that wide is how gloss behaves under a light.
+            // A flat fill has no ramp at all, so the face absorbs instead of
+            // reflecting — which is why premium cards are finished this way.
+            // The engraving now carries the surface, as a matte material
+            // should: legible by texture rather than by highlight.
+            'engraving bg-[oklch(0.205_0.015_265)]',
+            // The 1px inset highlight was the specular edge and it goes. The
+            // foil bloom warms slightly and the drop shadow deepens, because
+            // against a matte face the foil is the only thing left catching
+            // light — which is the point.
+            'shadow-[0_0_70px_-10px_oklch(0.85_0.072_82/18%),0_54px_100px_-30px_oklch(0_0_0/98%)]',
             isDead && 'opacity-50 saturate-0',
           )}
           style={{
@@ -120,7 +142,10 @@ export function SingleUseCard({ className }: { className?: string }) {
           {/* Foil sweep, fired on authorization */}
           {isAuthorized && (
             <span
-              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/14 to-transparent"
+              // Wider and weaker than it was. A matte surface still catches
+              // light on authorization, but it scatters it — a tight bright
+              // band would put the gloss straight back on the face.
+              className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/6 to-transparent"
               style={{ animation: 'foil-sweep 1.1s ease-out' }}
             />
           )}
