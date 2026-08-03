@@ -30,3 +30,11 @@ dist-ssr
 
 # Supabase CLI scratch
 supabase/.temp/
+.vercel
+
+# Real env files stay out; the example is tracked on purpose so a fresh clone
+# knows which keys it needs. `vercel link` writes a broad `.env*` here, which
+# would also swallow that example.
+.env
+.env.local
+.env.*.local
