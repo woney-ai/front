@@ -10,6 +10,16 @@
 
     <link rel="canonical" href="https://woney.ai/" />
 
+    <!-- Closed until the copy is final. robots.txt already disallows everyone,
+         which stops well-behaved crawlers from fetching this page at all — but
+         a disallowed URL can still be listed bare, from inbound links alone,
+         and not every crawler that ignores robots.txt ignores this tag too.
+         The two cover different gaps, so both stay until launch.
+
+         Remove this together with the robots.txt allowlist, in one deliberate
+         commit. See the note at the top of public/robots.txt. -->
+    <meta name="robots" content="noindex, nofollow" />
+
     <title>Woney — give your AI agent a way to pay</title>
     <meta
       name="description"
