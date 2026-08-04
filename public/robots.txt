@@ -1,38 +1,17 @@
-# Woney — agentic payments infrastructure.
+# Woney — closed to crawlers until the copy is final.
 #
-# Model crawlers are named and allowed on purpose. A company whose product
-# exists so agents can buy things has no business hiding from the systems those
-# agents are built on: if an assistant is asked how an AI agent can pay for
-# something, we would rather it have read this page than guess.
-
-User-agent: GPTBot
-Allow: /
-
-User-agent: OAI-SearchBot
-Allow: /
-
-User-agent: ChatGPT-User
-Allow: /
-
-User-agent: ClaudeBot
-Allow: /
-
-User-agent: Claude-Web
-Allow: /
-
-User-agent: anthropic-ai
-Allow: /
-
-User-agent: PerplexityBot
-Allow: /
-
-User-agent: Google-Extended
-Allow: /
-
-User-agent: Applebot-Extended
-Allow: /
+# The site is live at woney.ai and reachable by anyone, but the copy is not
+# finished. A person who wanders in and misreads the product costs us nothing.
+# A model crawler that ingests the wrong description of what Woney is cannot be
+# corrected by a later deploy — it is read once and kept.
+#
+# So this file is shut until the copy is settled. Everything below is a
+# blanket disallow, and there is no sitemap to follow.
+#
+# WHEN THE COPY IS FINAL: revert this file to the allowlist that names the
+# model crawlers explicitly, restore the Sitemap line, and drop the robots
+# meta tag from index.html. Opening up should be a deliberate commit, not a
+# side effect of some other change.
 
 User-agent: *
-Allow: /
-
-Sitemap: https://woney.ai/sitemap.xml
+Disallow: /
