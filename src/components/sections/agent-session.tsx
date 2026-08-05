@@ -80,13 +80,13 @@ const TRANSCRIPT: Entry[] = [
   {
     at: 1.55,
     kind: 'store',
-    text: 'Checking out at northwind.shop, like any other customer.',
+    text: 'Checking out at northwind.shop.',
   },
   {
     at: 2.1,
     wait: 0.42,
     kind: 'agent',
-    text: 'Ordered, arriving Thursday. That card does not work anymore.',
+    text: 'Ordered, arriving Thursday.',
   },
   {
     at: 2.6,
