@@ -1,123 +1,118 @@
-import {
-  Check,
-  CornerDownRight,
-  ShieldAlert,
-  ShoppingCart,
-  User,
-  X,
-} from 'lucide-react'
+import { ShoppingCart, User } from 'lucide-react'
 
 import { Wordmark } from '@/components/brand/wordmark'
+import { Message, MessageAvatar, MessageContent } from '@/components/ui/message'
+import { Badge } from '@/components/ui/badge'
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
 import { cn } from '@/lib/utils'
 
 import { SectionHeading } from './section-heading'
 
 /**
- * An illustrative session: what buying with Woney looks like from inside an
- * agent, under the daily limit its owner gave it. Sample data — no live
- * connection.
+ * An illustrative session: buying with Woney, seen from inside a chat.
+ * Sample data — no live connection.
  *
- * This is a product demo, not an API trace. Two rules follow from that.
+ * WHAT THIS HAS TO LOOK LIKE. An agent conversation happens in a terminal or
+ * in a chat client, and neither draws pictures mid-thread. What appears there
+ * is the tools the agent ran. A rendered credit card in the middle of a
+ * transcript is an advertisement wedged into a conversation, not a record of
+ * one — so the card is gone from here, and the tool call is back.
  *
- * It shows the product being built, not only what shipped this week — merchant
- * binding and the approval notification are both on the MVP path, and the
- * caption says plainly that capabilities here are in development. What it must
- * never do is present something nobody intends to build.
+ * It is back the way clients actually show it, though: a marker, the tool's
+ * name, one line of result. Not the block of JSON arguments this once
+ * printed. The arguments published a signature the product has not committed
+ * to, and a rename would leave the page lying — or leave someone treating a
+ * landing page as documentation. A name and a result say a tool ran and what
+ * came back, which is the whole point, and stop there.
  *
- * And it stays on the outside of the product. No hold mechanics, no error
- * codes, no internal field names: a reader should learn what the thing does,
- * not how it is wired, until there is something to log into.
+ * Two claims this must never make, because neither is true:
  *
- * Two things this transcript must never imply, because neither is true:
+ *   Woney is not an MCP server. It is payment infrastructure. How the agent
+ *   reaches it is the agent's business.
  *
- *   Woney is not an MCP server. It is payment infrastructure. The agent asks
- *   it for a card; how the agent reaches it is the agent's business.
+ *   Woney does not check out. The merchant's checkout is the same page every
+ *   shopper gets, and the agent works through it exactly as a person would.
+ *   Hence the `store` entry: that step is the one we do not do.
  *
- *   Woney does not check out. There is no `woney.checkout`, and inventing one
- *   would sell a capability that does not exist. The merchant's checkout is
- *   the same page every shopper gets, and the agent works through it exactly
- *   as a person would — unless that merchant has built something to help,
- *   which is theirs, not ours. Hence the `store` step: it is the agent
- *   labouring at a normal checkout, with no Woney in the loop.
- *
- * The transcript deliberately ends on a decline: autonomy inside the limit,
- * a hard stop outside it.
+ * The transcript ends on a refusal on purpose — autonomy inside the limit, a
+ * stop outside it, and a way to say yes.
  */
 
-type Entry =
+const DAILY_LIMIT = 500
+const SPENT = 142.6
+const BLOCKED_AMOUNT = 399
+
+const money = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+
+/**
+ * `at` is the second a turn lands on, and `wait` how long the agent appears to
+ * be composing before it. Both are written by hand rather than derived from
+ * the index, because an even interval reads as a list animating and a
+ * conversation is never even: a question comes back quickly, a decision about
+ * money takes a moment.
+ */
+type Entry = { at: number; wait?: number } & (
   | { kind: 'user'; text: string }
   | { kind: 'agent'; text: string }
-  | { kind: 'store'; text: string; detail: string }
-  | {
-      kind: 'tool'
-      tool: string
-      args: Record<string, string | number>
-      status: 'ok' | 'declined'
-      result: string
-    }
+  | { kind: 'store'; text: string }
+  | { kind: 'tool'; tool: string; result: string; status: 'done' | 'held' }
+)
 
 const TRANSCRIPT: Entry[] = [
   {
+    at: 0.1,
     kind: 'user',
     text: 'Reorder the caster wheels for my chair.',
   },
   {
+    at: 0.75,
+    wait: 0.5,
     kind: 'agent',
     text: 'Found them at northwind.shop — $142.60 including shipping. That is inside my limit, so I can handle it.',
   },
   {
+    at: 1.15,
     kind: 'tool',
-    tool: 'woney.issue_card',
-    args: {
-      amount: 142.6,
-      currency: 'USD',
-      merchant: 'northwind.shop',
-    },
-    status: 'ok',
-    result: 'card_4408 · single use · locked to northwind.shop',
+    tool: 'woney · issue_card',
+    result: `northwind.shop · ${money(SPENT)} · single use`,
+    status: 'done',
   },
   {
+    at: 1.55,
     kind: 'store',
-    text: "Paying at northwind.shop's checkout, the same one any shopper gets.",
-    detail: 'card_4408 · accepted like any card · nothing to integrate',
+    text: 'Checking out at northwind.shop.',
   },
   {
+    at: 2.1,
+    wait: 0.42,
     kind: 'agent',
-    text: 'Ordered, arriving Thursday. The card that paid for it no longer exists.',
+    text: 'Ordered, arriving Thursday.',
   },
   {
+    at: 2.6,
     kind: 'user',
     text: 'Great. Add the standing desk mat too.',
   },
+  // The amount alone is under the limit. What goes over is the amount plus
+  // what today already spent — saying so is what makes the example legible,
+  // and it is the moment the product is worth the most.
   {
+    at: 3.05,
     kind: 'tool',
-    tool: 'woney.issue_card',
-    args: {
-      amount: 399.0,
-      currency: 'USD',
-      merchant: 'northwind.shop',
-    },
-    status: 'declined',
-    result: 'declined · over your limit · approval requested',
+    tool: 'woney · issue_card',
+    result: `${money(BLOCKED_AMOUNT)} · would pass your $${DAILY_LIMIT} daily limit`,
+    status: 'held',
   },
+  // The longest pause on the page, and the only one that is deliberate. This
+  // is the turn where the agent has to tell you no.
   {
+    at: 3.7,
+    wait: 0.6,
     kind: 'agent',
-    text: "That one is over your limit, so I can't issue a card for it. I sent it to your phone to approve.",
+    text: 'That would take you past your daily limit, so I have not bought it. I sent you a request — approve it and I will place the order.',
   },
 ]
-
-function formatArgs(args: Record<string, string | number>): string {
-  const body = Object.entries(args)
-    .map(([key, value]) => {
-      if (typeof value !== 'number') return `${key}: "${value}"`
-      // Money always carries its minor units, the way a real API would.
-      return `${key}: ${key.includes('amount') ? value.toFixed(2) : value}`
-    })
-    .join(', ')
-
-  return `{ ${body} }`
-}
 
 export function AgentSession() {
   const { ref, started } = useRevealSequence()
@@ -129,23 +124,17 @@ export function AgentSession() {
           index="In the agent"
           title="The card, not the checkout."
         >
-          Your agent still does the buying. It works through the merchant's
-          checkout the way a person would, because that is the same checkout
-          everyone gets. What it never gets is your card — it asks for one that
-          exists for that purchase and stops working after it.
+          {/* The two sections above already argued the case. This one only has
+              to show it, so the lead points at the transcript instead of
+              restating what the reader just read. */}
+          Here is what that looks like inside a chat with your agent.
         </SectionHeading>
 
         <div
           ref={ref}
           className="mt-12 overflow-hidden rounded-xl border border-line bg-ink-deep shadow-[0_40px_80px_-40px_oklch(0_0_0/80%)]"
         >
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line bg-white/[0.02] px-5 py-3">
-            <span className="rule-mono text-bone-faint">Agent session</span>
-            <span className="rule-mono flex items-center gap-2 text-bone-faint">
-              <span className="size-1.5 rounded-full bg-signal" aria-hidden />
-              Daily limit $500 · $142.60 used
-            </span>
-          </div>
+          <SessionBar />
 
           {/* Every entry is always rendered. The stagger is CSS, driven off
               `data-sequenced`, so the transcript exists in the prerendered HTML
@@ -153,14 +142,20 @@ export function AgentSession() {
               counter that is zero on the server, which hid this entire section
               from exactly the machines it was written for. */}
           <ol
-            className="divide-y divide-line"
+            aria-label="Example session between a person and their agent"
+            className="flex flex-col gap-3 px-4 py-5 sm:gap-3.5 sm:px-6 sm:py-6"
             data-sequenced={started || undefined}
           >
             {TRANSCRIPT.map((entry, index) => (
               <li
                 key={index}
-                className="reveal-step px-5 py-4 sm:px-7 sm:py-5"
-                style={{ '--step': index } as React.CSSProperties}
+                className="relative"
+                style={
+                  {
+                    '--at': entry.at,
+                    '--wait': entry.wait ?? 0.5,
+                  } as React.CSSProperties
+                }
               >
                 <TranscriptEntry entry={entry} />
               </li>
@@ -168,121 +163,187 @@ export function AgentSession() {
           </ol>
         </div>
 
-        <p className="mt-5 text-center text-[0.8125rem] text-bone-faint">
-          Sample identifiers and amounts.
-        </p>
+        {/* No caption. "Sample identifiers and amounts" told the reader
+            something the lead above already establishes — this is what a
+            session looks like — and northwind.shop is not a claim anyone will
+            mistake for a real order of theirs. */}
       </div>
     </section>
   )
 }
 
+/**
+ * The window chrome, and only that.
+ *
+ * A spend meter lived here for a while — a bar showing the day's total with
+ * the blocked purchase spilling past the limit. It read well and it was
+ * wrong: chat clients and terminals do not carry dashboards above the thread.
+ * It made the frame look like a product screenshot rather than the window an
+ * agent conversation actually happens in.
+ *
+ * The arithmetic it was there to explain is carried by the transcript itself,
+ * where the refusal names the limit it would have crossed.
+ */
+function SessionBar() {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line bg-white/[0.02] px-5 py-3">
+      <span className="rule-mono text-bone-faint">Agent session</span>
+      <span className="rule-mono text-bone-faint tabular-nums">
+        Daily limit ${DAILY_LIMIT}
+      </span>
+    </div>
+  )
+}
+
+/**
+ * Who is speaking, for anyone not reading with their eyes.
+ *
+ * Left and right, avatars and colour carried the whole answer to "who said
+ * this", and every one of those cues is visual. Extracted as text, the
+ * transcript ran together into one voice — and a page written to be legible
+ * to the machines agents run on was, in the section that demonstrates the
+ * product, illegible to them.
+ */
+function Speaker({ children }: { children: string }) {
+  return <span className="sr-only">{children}</span>
+}
+
+/**
+ * The pause before an answer, made visible.
+ *
+ * Absolutely positioned so it occupies no space: the reply beneath it is
+ * already in the layout, merely transparent, so nothing moves when the dots
+ * hand over. Hidden entirely without JavaScript and under reduced motion,
+ * where the transcript is simply all there and nothing should pretend to be
+ * in progress.
+ */
+function TypingDots() {
+  return (
+    <span className="chat-typing absolute top-1 left-10 flex gap-1" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="size-1.5 rounded-full bg-bone-faint"
+          style={{
+            animation: 'typing-dot 1.05s ease-in-out infinite',
+            animationDelay: `${i * 0.16}s`,
+          }}
+        />
+      ))}
+    </span>
+  )
+}
+
 function TranscriptEntry({ entry }: { entry: Entry }) {
+  // What you say, what the agent answers and what actually happens are three
+  // different kinds of thing. They used to share one treatment and read as a
+  // flat list. Now speech has a side, and events have none — they are not
+  // anyone's turn.
   if (entry.kind === 'user') {
     return (
-      <div className="flex gap-3.5">
-        <Avatar>
+      <Message align="end" className="chat-step">
+        <Speaker>You said: </Speaker>
+        <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <User className="size-3.5 text-bone-dim" aria-hidden />
-        </Avatar>
-        <p className="pt-0.5 text-[0.9375rem] leading-relaxed text-bone">
-          {entry.text}
-        </p>
-      </div>
+        </MessageAvatar>
+        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+          {/* w-fit and self-end because MessageContent is full width and its
+              own end-alignment rule only reaches children carrying a
+              data-slot. Without these the bubble stretches to the cap instead
+              of hugging its text, which is the one thing a chat bubble has to
+              do. */}
+          <p className="w-fit self-end rounded-xl rounded-br-sm bg-surface px-4 py-2.5 text-[0.9375rem] leading-relaxed text-bone">
+            {entry.text}
+          </p>
+        </MessageContent>
+      </Message>
     )
   }
 
   if (entry.kind === 'agent') {
     return (
-      <div className="flex gap-3.5">
-        <Avatar className="border-foil/30 bg-foil/10">
-          <Wordmark variant="monogram" />
-        </Avatar>
-        <p className="pt-0.5 text-[0.9375rem] leading-relaxed text-bone-dim">
-          {entry.text}
-        </p>
-      </div>
+      <>
+        {/* Sits where the reply will be and is gone by the time it lands. Out
+            of the flow, so nothing shifts when it goes. */}
+        <TypingDots />
+
+        <Message className="chat-step">
+          <Speaker>Your agent said: </Speaker>
+          <MessageAvatar className="size-7 self-start border border-foil/30 bg-foil/10">
+            <Wordmark variant="monogram" />
+          </MessageAvatar>
+          <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+            <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-dim">
+              {entry.text}
+            </p>
+          </MessageContent>
+        </Message>
+      </>
     )
   }
 
-  // The agent working the merchant's own checkout. Rendered plainly on
-  // purpose: no call signature, no arguments, nothing that could be mistaken
-  // for something Woney provides. This step is the part we do not do.
+  // The agent working the merchant's own checkout. Deliberately the plainest
+  // row on the page: this is the step Woney does not perform, so nothing here
+  // should look like a capability of ours.
   if (entry.kind === 'store') {
     return (
-      <div className="flex gap-3.5">
-        <Avatar>
+      <Message className="chat-step">
+        <Speaker>At the store: </Speaker>
+        <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
-        </Avatar>
-
-        <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-[0.9375rem] leading-relaxed text-bone-dim">
+        </MessageAvatar>
+        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+          <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-faint italic">
             {entry.text}
           </p>
-          <p className="mt-2 font-mono text-xs text-bone-faint">
-            {entry.detail}
-          </p>
-        </div>
-      </div>
+        </MessageContent>
+      </Message>
     )
   }
 
-  const declined = entry.status === 'declined'
+  // A tool call, the way an agent client actually renders one: a marker, the
+  // tool's name, and one line of result. Not a rendered credit card — nothing
+  // in a terminal or a chat app draws an object mid-conversation, and a
+  // picture of the product here reads as an advertisement wedged into a
+  // transcript rather than as something that happened.
+  //
+  // The name is shown without its arguments. It says a tool ran and what came
+  // back, which is the whole point, and it stops short of publishing a
+  // signature the product has not committed to yet.
+  const held = entry.status === 'held'
 
   return (
-    <div className="flex gap-3.5">
-      <Avatar
-        className={cn(declined && 'border-destructive/35 bg-destructive/10')}
-      >
-        {declined ? (
-          <ShieldAlert className="size-3.5 text-destructive" aria-hidden />
-        ) : (
-          <CornerDownRight className="size-3.5 text-bone-faint" aria-hidden />
+    <div className="chat-step flex gap-3">
+      <Speaker>Tool call: </Speaker>
+
+      <span
+        className={cn(
+          'mt-1.5 size-1.5 shrink-0 rounded-full',
+          held ? 'bg-foil' : 'bg-signal',
         )}
-      </Avatar>
+        aria-hidden
+      />
 
-      <div className="min-w-0 flex-1 pt-0.5">
-        <p className="font-mono text-sm text-bone">
-          <span className="text-bone-faint">call </span>
-          {entry.tool}
-        </p>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <code className="font-mono text-[0.8125rem] text-bone">
+            {entry.tool}
+          </code>
+          <Badge
+            variant="outline"
+            className={cn(
+              'rule-mono border-transparent px-1.5 py-0',
+              held ? 'bg-foil/18 text-foil' : 'bg-signal/18 text-signal',
+            )}
+          >
+            {held ? 'Needs approval' : 'Done'}
+          </Badge>
+        </div>
 
-        <pre className="mt-2 rounded-md border border-line bg-black/25 px-3 py-2 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-bone-dim">
-          {formatArgs(entry.args)}
-        </pre>
-
-        <p
-          className={cn(
-            'mt-2 flex items-start gap-2 font-mono text-xs',
-            declined ? 'text-destructive' : 'text-signal',
-          )}
-        >
-          {declined ? (
-            <X className="mt-px size-3.5 shrink-0" aria-hidden />
-          ) : (
-            <Check className="mt-px size-3.5 shrink-0" aria-hidden />
-          )}
-          <span className="min-w-0 break-words">{entry.result}</span>
+        <p className="mt-1 font-mono text-xs leading-relaxed break-words text-bone-dim tabular-nums">
+          {entry.result}
         </p>
       </div>
     </div>
-  )
-}
-
-function Avatar({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <span
-      className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-full border border-line bg-white/[0.04]',
-        className,
-      )}
-      aria-hidden
-    >
-      {children}
-    </span>
   )
 }

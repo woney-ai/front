@@ -1,35 +1,48 @@
 import { SectionHeading } from './section-heading'
 
+/**
+ * Why the product can be trusted, said without a vocabulary lesson.
+ *
+ * The claims here are unchanged — the same six controls, the same promises.
+ * What changed is that they are now in ordinary English. The previous copy
+ * spoke fluent payments and fluent AI, and expected the reader to as well:
+ * "at issuance", "gets a decline", "never authorizes", "hallucinates",
+ * "machine-readable line items", and a card that was twice "minted".
+ *
+ * Someone deciding whether to trust us with money should not have to learn
+ * our vocabulary first. Every term a reader would have to look up is a reason
+ * to close the tab.
+ */
 const capabilities = [
   {
     title: 'One card, one purchase',
     description:
-      'Every checkout gets a freshly minted card that expires with the transaction. A leaked number is already worthless.',
+      'Every purchase gets its own card, and it stops working once that purchase is paid. Even if the number is copied, it cannot be used again.',
   },
   {
-    title: 'Amount locked at issuance',
+    title: 'Set to the exact amount',
     description:
-      'The card is minted for the exact cart total. An agent that hallucinates a bigger order gets a decline, not a charge.',
+      'The card is created for the exact total of that purchase. It cannot be charged for more, even by mistake.',
   },
   {
-    title: 'Merchant locked',
+    title: 'Works at one store only',
     description:
-      'Each card only works at the store it was issued for. Anywhere else, the transaction never authorizes.',
+      'Each card only works at the store it was created for. Anywhere else, the payment does not go through.',
   },
   {
     title: 'Approval only when it matters',
     description:
-      'Under your limit the agent just buys. Over it, no card is issued and the decision comes to you — the only moment you are asked for one.',
+      'Under your limit, your agent buys on its own. Over it, the purchase waits for you.',
   },
   {
-    title: 'Structured receipts',
+    title: 'A receipt for every purchase',
     description:
-      'Machine-readable line items back to your agent, human-readable history back to you.',
+      'Your agent gets the details it needs to keep track. You get a history you can actually read.',
   },
   {
-    title: 'Full audit trail',
+    title: 'You can see everything',
     description:
-      'Who asked, what the agent decided, which card paid for it — for every single checkout.',
+      'Who asked for it, what your agent decided, and which card paid — for every purchase.',
   },
 ]
 
@@ -38,9 +51,12 @@ export function Capabilities() {
     <section className="border-t border-line">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <SectionHeading index="Controls" title="The card is the control.">
-          Handing a model your card number is not a payments strategy. Woney
-          moves the limits into the card itself, where the network enforces them
-          — not into a prompt the agent can talk its way around.
+          {/* The whole argument for the product, in two sentences. The version
+              this replaces made the same point by explaining where enforcement
+              happens — which is our plumbing, and not something a reader
+              should need in order to feel safe. */}
+          Your agent is not asked to behave. The limits live in the card itself,
+          so there is nothing for it to get wrong.
         </SectionHeading>
 
         <div className="mt-14 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">

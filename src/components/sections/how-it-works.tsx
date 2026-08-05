@@ -1,23 +1,41 @@
 import { SectionHeading } from './section-heading'
 
+/**
+ * The three steps of using Woney, in plain language.
+ *
+ * This section explains how the product is used. That is its whole job, so it
+ * is written to be understood on one read: short sentences, ordinary words,
+ * no metaphors and no figures of speech that ask the reader to look twice.
+ *
+ * Two rules earned the hard way, both from drafts that were rejected:
+ *
+ *   Say what the reader gets, never how we build it. "Connect a funding
+ *   source", "standing authorization" and "nothing asks the merchant to
+ *   integrate with us" all described our side of the counter. A reader does
+ *   not care that no integration is required; they care that it works at the
+ *   store they are already on.
+ *
+ *   Keep the language courteous. An earlier draft closed on "that number is
+ *   dead". It is vivid and it is wrong for a product people trust with money.
+ */
 const steps = [
   {
     step: '01',
-    title: 'You authorize once',
+    title: 'Set a limit',
     description:
-      'Connect a funding source and give each agent a daily limit. That standing authorization covers every purchase after it — you are not approving carts one by one.',
+      'You decide how much your agent can spend. It works freely inside that limit, so you are not asked to approve every purchase.',
   },
   {
     step: '02',
-    title: 'The agent does the shopping',
+    title: 'Your agent shops',
     description:
-      'It researches, compares and reaches a checkout anywhere online. The same checkout you would use, because nothing here asks the merchant to integrate with us.',
+      'It searches, compares and pays at any online store, the same way you would. Nothing changes on the store’s side.',
   },
   {
     step: '03',
-    title: 'Woney issues one card',
+    title: 'One card per purchase',
     description:
-      'A card that exists for that one purchase and nothing else: one merchant, one amount, one transaction. Your funding source settles it, and the number is worthless the moment it clears.',
+      'Each purchase gets its own card, for one store and one amount. Once the payment goes through, the card stops working.',
   },
 ]
 
@@ -26,8 +44,13 @@ export function HowItWorks() {
     <section id="how-it-works" className="border-t border-line bg-ink-deep">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <SectionHeading index="How it works" title="Three moves. One card.">
-          Your real card never leaves your account, and the agent never touches
-          a number it can spend twice.
+          {/* The hook has one job: answer the question the reader arrives with
+              — does my card end up in the agent's hands — and hand over the
+              title. "One card" in the heading above means nothing until this
+              line explains it, and the steps below read differently once it
+              has. The previous version said the same thing in twice the words
+              and asked the reader to unpack "a number it can spend twice". */}
+          You keep your card. Your agent gets a new one for every purchase.
         </SectionHeading>
 
         <ol className="mt-14 grid gap-y-10 sm:grid-cols-3 sm:gap-x-10">
