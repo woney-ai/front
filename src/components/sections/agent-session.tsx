@@ -124,6 +124,8 @@ export function AgentSession() {
               counter that is zero on the server, which hid this entire section
               from exactly the machines it was written for. */}
           <ol
+            aria-label="Example session between a person and their agent"
+            aria-describedby="session-note"
             className="flex flex-col gap-3 px-4 py-5 sm:gap-3.5 sm:px-6 sm:py-6"
             data-sequenced={started || undefined}
           >
@@ -139,12 +141,31 @@ export function AgentSession() {
           </ol>
         </div>
 
-        <p className="mt-5 text-center text-[0.8125rem] text-bone-faint">
+        {/* Referenced by the list's aria-describedby, so "these are made-up
+            figures" reaches a screen reader before the numbers do rather than
+            arriving as an afterthought below them. */}
+        <p
+          id="session-note"
+          className="mt-5 text-center text-[0.8125rem] text-bone-faint"
+        >
           Sample identifiers and amounts.
         </p>
       </div>
     </section>
   )
+}
+
+/**
+ * Who is speaking, for anyone not reading with their eyes.
+ *
+ * Left and right, avatars and colour carried the whole answer to "who said
+ * this", and every one of those cues is visual. Extracted as text, the
+ * transcript ran together into one voice — and a page written to be legible
+ * to the machines agents run on was, in the section that demonstrates the
+ * product, illegible to them.
+ */
+function Speaker({ children }: { children: string }) {
+  return <span className="sr-only">{children}</span>
 }
 
 function TranscriptEntry({ entry }: { entry: Entry }) {
@@ -155,6 +176,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   if (entry.kind === 'user') {
     return (
       <div className="flex justify-end gap-3">
+        <Speaker>You said: </Speaker>
         <p className="max-w-[85%] rounded-xl rounded-br-sm bg-surface px-4 py-2.5 text-[0.9375rem] leading-relaxed text-bone sm:max-w-[70%]">
           {entry.text}
         </p>
@@ -168,6 +190,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   if (entry.kind === 'agent') {
     return (
       <div className="flex gap-3">
+        <Speaker>Your agent said: </Speaker>
         <Avatar className="border-foil/30 bg-foil/10">
           <Wordmark variant="monogram" />
         </Avatar>
@@ -184,6 +207,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   if (entry.kind === 'store') {
     return (
       <div className="flex gap-3">
+        <Speaker>At the store: </Speaker>
         <Avatar>
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
         </Avatar>
@@ -196,33 +220,29 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
 
   const blocked = entry.status === 'blocked'
 
-  // Not speech. Full width, inset, and railed in foil or in the alarm colour —
-  // an instrument reading, not a turn in the conversation.
+  // Not speech. Full width, inset, railed — an instrument reading, not a turn
+  // in the conversation.
+  //
+  // Both rails are foil, including the one that stops a purchase. Red would
+  // read as failure, and nothing failed: the limit held, and there is a way
+  // to say yes. The icon and the label carry the difference, so the meaning
+  // does not depend on colour — which is also what stops it disappearing for
+  // a reader who cannot distinguish the two.
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3.5 rounded-lg border border-l-2 bg-black/25 px-4 py-3',
-        blocked
-          ? 'border-line border-l-destructive'
-          : 'border-line border-l-foil',
-      )}
-    >
+    <div className="flex items-center gap-3.5 rounded-lg border border-line border-l-2 border-l-foil bg-black/25 px-4 py-3">
+      <Speaker>Woney: </Speaker>
+
       {blocked ? (
-        <ShieldAlert className="size-4 shrink-0 text-destructive" aria-hidden />
+        <ShieldAlert className="size-4 shrink-0 text-foil" aria-hidden />
       ) : (
         <CreditCard className="size-4 shrink-0 text-foil" aria-hidden />
       )}
 
       <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-3">
-        <span
-          className={cn(
-            'block text-sm font-semibold tracking-[-0.01em]',
-            blocked ? 'text-destructive' : 'text-bone',
-          )}
-        >
+        <span className="block text-sm font-semibold tracking-[-0.01em] text-bone">
           {entry.label}
         </span>
-        <span className="mt-1 block font-mono text-xs leading-relaxed break-words text-bone-dim sm:mt-0">
+        <span className="mt-1 block font-mono text-xs leading-relaxed break-words text-bone-dim tabular-nums sm:mt-0">
           {entry.detail}
         </span>
       </div>
