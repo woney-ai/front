@@ -44,36 +44,52 @@ const BLOCKED_AMOUNT = 399
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 
-type Entry =
+/**
+ * `at` is the second a turn lands on, and `wait` how long the agent appears to
+ * be composing before it. Both are written by hand rather than derived from
+ * the index, because an even interval reads as a list animating and a
+ * conversation is never even: a question comes back quickly, a decision about
+ * money takes a moment.
+ */
+type Entry = { at: number; wait?: number } & (
   | { kind: 'user'; text: string }
   | { kind: 'agent'; text: string }
   | { kind: 'store'; text: string }
   | { kind: 'tool'; tool: string; result: string; status: 'done' | 'held' }
+)
 
 const TRANSCRIPT: Entry[] = [
   {
+    at: 0.1,
     kind: 'user',
     text: 'Reorder the caster wheels for my chair.',
   },
   {
+    at: 0.75,
+    wait: 0.5,
     kind: 'agent',
     text: 'Found them at northwind.shop — $142.60 including shipping. That is inside my limit, so I can handle it.',
   },
   {
+    at: 1.15,
     kind: 'tool',
     tool: 'woney · issue_card',
     result: `northwind.shop · ${money(SPENT)} · single use`,
     status: 'done',
   },
   {
+    at: 1.55,
     kind: 'store',
     text: 'Checking out at northwind.shop, like any other customer.',
   },
   {
+    at: 2.1,
+    wait: 0.42,
     kind: 'agent',
     text: 'Ordered, arriving Thursday. That card does not work anymore.',
   },
   {
+    at: 2.6,
     kind: 'user',
     text: 'Great. Add the standing desk mat too.',
   },
@@ -81,12 +97,17 @@ const TRANSCRIPT: Entry[] = [
   // what today already spent — saying so is what makes the example legible,
   // and it is the moment the product is worth the most.
   {
+    at: 3.05,
     kind: 'tool',
     tool: 'woney · issue_card',
     result: `${money(BLOCKED_AMOUNT)} · would pass your $${DAILY_LIMIT} daily limit`,
     status: 'held',
   },
+  // The longest pause on the page, and the only one that is deliberate. This
+  // is the turn where the agent has to tell you no.
   {
+    at: 3.7,
+    wait: 0.6,
     kind: 'agent',
     text: 'That would take you past your daily limit, so I have not bought it. I sent you a request — approve it and I will place the order.',
   },
@@ -128,8 +149,13 @@ export function AgentSession() {
             {TRANSCRIPT.map((entry, index) => (
               <li
                 key={index}
-                className="reveal-step"
-                style={{ '--step': index } as React.CSSProperties}
+                className="relative"
+                style={
+                  {
+                    '--at': entry.at,
+                    '--wait': entry.wait ?? 0.5,
+                  } as React.CSSProperties
+                }
               >
                 <TranscriptEntry entry={entry} />
               </li>
@@ -187,6 +213,32 @@ function Speaker({ children }: { children: string }) {
   return <span className="sr-only">{children}</span>
 }
 
+/**
+ * The pause before an answer, made visible.
+ *
+ * Absolutely positioned so it occupies no space: the reply beneath it is
+ * already in the layout, merely transparent, so nothing moves when the dots
+ * hand over. Hidden entirely without JavaScript and under reduced motion,
+ * where the transcript is simply all there and nothing should pretend to be
+ * in progress.
+ */
+function TypingDots() {
+  return (
+    <span className="chat-typing absolute top-1 left-10 flex gap-1" aria-hidden>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="size-1.5 rounded-full bg-bone-faint"
+          style={{
+            animation: 'typing-dot 1.05s ease-in-out infinite',
+            animationDelay: `${i * 0.16}s`,
+          }}
+        />
+      ))}
+    </span>
+  )
+}
+
 function TranscriptEntry({ entry }: { entry: Entry }) {
   // What you say, what the agent answers and what actually happens are three
   // different kinds of thing. They used to share one treatment and read as a
@@ -194,7 +246,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   // anyone's turn.
   if (entry.kind === 'user') {
     return (
-      <div className="flex justify-end gap-3">
+      <div className="chat-step flex justify-end gap-3">
         <Speaker>You said: </Speaker>
         <p className="max-w-[85%] rounded-xl rounded-br-sm bg-surface px-4 py-2.5 text-[0.9375rem] leading-relaxed text-bone sm:max-w-[70%]">
           {entry.text}
@@ -208,15 +260,21 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
 
   if (entry.kind === 'agent') {
     return (
-      <div className="flex gap-3">
-        <Speaker>Your agent said: </Speaker>
-        <Avatar className="border-foil/30 bg-foil/10">
-          <Wordmark variant="monogram" />
-        </Avatar>
-        <p className="max-w-[85%] pt-1 text-[0.9375rem] leading-relaxed text-bone-dim sm:max-w-[70%]">
-          {entry.text}
-        </p>
-      </div>
+      <>
+        {/* Sits where the reply will be and is gone by the time it lands. Out
+            of the flow, so nothing shifts when it goes. */}
+        <TypingDots />
+
+        <div className="chat-step flex gap-3">
+          <Speaker>Your agent said: </Speaker>
+          <Avatar className="border-foil/30 bg-foil/10">
+            <Wordmark variant="monogram" />
+          </Avatar>
+          <p className="max-w-[85%] pt-1 text-[0.9375rem] leading-relaxed text-bone-dim sm:max-w-[70%]">
+            {entry.text}
+          </p>
+        </div>
+      </>
     )
   }
 
@@ -225,7 +283,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   // should look like a capability of ours.
   if (entry.kind === 'store') {
     return (
-      <div className="flex gap-3">
+      <div className="chat-step flex gap-3">
         <Speaker>At the store: </Speaker>
         <Avatar>
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
@@ -249,7 +307,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   const held = entry.status === 'held'
 
   return (
-    <div className="flex gap-3">
+    <div className="chat-step flex gap-3">
       <Speaker>Tool call: </Speaker>
 
       <span

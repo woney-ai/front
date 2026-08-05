@@ -274,11 +274,76 @@
   }
 }
 
+/* A conversation does not arrive on a metronome. `--at` is the second each
+   turn lands on, written per entry rather than derived from its index, so a
+   question can come back fast and an answer can take a beat — which is the
+   difference between a transcript playing and a list animating in.
+   Descendant, not child: the row itself stays put so the typing dots inside
+   it are not hidden by their own container's fade. */
+@utility chat-step {
+  [data-sequenced] & {
+    animation: chat-in 0.4s cubic-bezier(0.22, 0.85, 0.3, 1) both;
+    animation-delay: calc(var(--at, 0) * 1s);
+  }
+}
+
+/* The dots live in the gap before a turn arrives and are gone by the time it
+   does. Hidden by default, so without JavaScript — and under reduced motion,
+   where the sequence never starts — the transcript is simply all there, with
+   nothing pretending to be in progress. */
+@utility chat-typing {
+  opacity: 0;
+
+  [data-sequenced] & {
+    animation: typing-life calc(var(--wait, 0.5) * 1s) linear both;
+    animation-delay: calc((var(--at, 0) - var(--wait, 0.5)) * 1s);
+  }
+}
+
 @utility rule-mono {
   @apply font-mono text-xs tracking-[0.16em] uppercase;
 }
 
 /* Page-load choreography: one orchestrated reveal beats scattered fidgeting. */
+@keyframes chat-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes typing-life {
+  0% {
+    opacity: 0;
+  }
+  16% {
+    opacity: 1;
+  }
+  84% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes typing-dot {
+  0%,
+  62%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  31% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;
