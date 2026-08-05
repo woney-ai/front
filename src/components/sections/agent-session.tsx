@@ -1,6 +1,7 @@
-import { ShieldAlert, ShoppingCart, User } from 'lucide-react'
+import { ShoppingCart, User } from 'lucide-react'
 
 import { Wordmark } from '@/components/brand/wordmark'
+import { Badge } from '@/components/ui/badge'
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
 import { cn } from '@/lib/utils'
 
@@ -10,19 +11,18 @@ import { SectionHeading } from './section-heading'
  * An illustrative session: buying with Woney, seen from inside a chat.
  * Sample data — no live connection.
  *
- * WHY THERE IS NO FUNCTION CALL HERE ANY MORE. This used to print
- * `woney.issue_card` with a block of JSON arguments. Three things were wrong
- * with that. It published an API surface that is not public yet, so a rename
- * would leave the page lying — or worse, leave someone treating a landing
- * page as documentation. It exposed how the product works inside, which is
- * not for before launch. And the audience is both agent developers and people
- * who delegate purchases to an assistant: the call signature gains a little
- * with the first group and loses the second entirely, because code on a page
- * reads as "not for me".
+ * WHAT THIS HAS TO LOOK LIKE. An agent conversation happens in a terminal or
+ * in a chat client, and neither draws pictures mid-thread. What appears there
+ * is the tools the agent ran. A rendered credit card in the middle of a
+ * transcript is an advertisement wedged into a conversation, not a record of
+ * one — so the card is gone from here, and the tool call is back.
  *
- * What replaced it says the same thing as an event: the card appearing, with
- * the store, the amount and the single use all still visible. Nothing
- * persuasive was lost — the exact figures and the refusal are what convince.
+ * It is back the way clients actually show it, though: a marker, the tool's
+ * name, one line of result. Not the block of JSON arguments this once
+ * printed. The arguments published a signature the product has not committed
+ * to, and a rename would leave the page lying — or leave someone treating a
+ * landing page as documentation. A name and a result say a tool ran and what
+ * came back, which is the whole point, and stop there.
  *
  * Two claims this must never make, because neither is true:
  *
@@ -48,8 +48,7 @@ type Entry =
   | { kind: 'user'; text: string }
   | { kind: 'agent'; text: string }
   | { kind: 'store'; text: string }
-  | { kind: 'card'; merchant: string; amount: number; last4: string }
-  | { kind: 'blocked'; amount: number; reason: string }
+  | { kind: 'tool'; tool: string; result: string; status: 'done' | 'held' }
 
 const TRANSCRIPT: Entry[] = [
   {
@@ -61,10 +60,10 @@ const TRANSCRIPT: Entry[] = [
     text: 'Found them at northwind.shop — $142.60 including shipping. That is inside my limit, so I can handle it.',
   },
   {
-    kind: 'card',
-    merchant: 'northwind.shop',
-    amount: SPENT,
-    last4: '4408',
+    kind: 'tool',
+    tool: 'woney · create_card',
+    result: `northwind.shop · ${money(SPENT)} · single use`,
+    status: 'done',
   },
   {
     kind: 'store',
@@ -82,9 +81,10 @@ const TRANSCRIPT: Entry[] = [
   // what today already spent — saying so is what makes the example legible,
   // and it is the moment the product is worth the most.
   {
-    kind: 'blocked',
-    amount: BLOCKED_AMOUNT,
-    reason: 'would take you past your $500 daily limit',
+    kind: 'tool',
+    tool: 'woney · create_card',
+    result: `${money(BLOCKED_AMOUNT)} · would pass your $${DAILY_LIMIT} daily limit`,
+    status: 'held',
   },
   {
     kind: 'agent',
@@ -259,68 +259,47 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
     )
   }
 
-  // The card, drawn rather than described. The product's whole argument is an
-  // object — a card that exists for one purchase — and the demo was spending
-  // its strongest moment on a line of text. Same face as the hero card: matte
-  // black, foil hairline, engraved field.
-  if (entry.kind === 'card') {
-    return (
-      <div className="flex justify-center py-1">
-        <Speaker>Woney created a card: </Speaker>
-
-        <figure className="engraving w-full max-w-[21rem] rounded-xl bg-[oklch(0.205_0.015_265)] p-4 shadow-[0_0_40px_-16px_oklch(0.85_0.072_82/22%),0_20px_40px_-18px_oklch(0_0_0/95%)] ring-1 ring-foil/20">
-          <figcaption className="flex items-baseline justify-between">
-            <Wordmark variant="card" />
-            <span className="rule-mono text-foil/80">Single use</span>
-          </figcaption>
-
-          <p className="mt-4 font-mono text-[0.9375rem] text-bone tabular-nums">
-            <span className="text-bone-faint">•••• •••• •••• </span>
-            {entry.last4}
-          </p>
-
-          <dl className="mt-4 grid grid-cols-[1.5fr_1fr_auto] gap-3 border-t border-foil/12 pt-3">
-            {[
-              ['Merchant', entry.merchant],
-              ['Amount', money(entry.amount)],
-              ['Uses', '0 / 1'],
-            ].map(([term, value]) => (
-              <div key={term} className="min-w-0">
-                <dt className="rule-mono text-bone-faint">{term}</dt>
-                <dd className="mt-1 truncate font-mono text-[0.8125rem] text-bone-dim tabular-nums">
-                  {value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </figure>
-      </div>
-    )
-  }
-
-  // And its opposite: the shape of the card that was not made. An outline with
-  // nothing inside says "no card exists for this" in a way no sentence does —
-  // and it is the same idea the mark is built on, a thing defined by absence.
+  // A tool call, the way an agent client actually renders one: a marker, the
+  // tool's name, and one line of result. Not a rendered credit card — nothing
+  // in a terminal or a chat app draws an object mid-conversation, and a
+  // picture of the product here reads as an advertisement wedged into a
+  // transcript rather than as something that happened.
   //
-  // Not red. Nothing failed here: the limit held and there is a way to say
-  // yes. The label and the icon carry the meaning, so it never rests on a
-  // colour some readers cannot separate.
+  // The name is shown without its arguments. It says a tool ran and what came
+  // back, which is the whole point, and it stops short of publishing a
+  // signature the product has not committed to yet.
+  const held = entry.status === 'held'
+
   return (
-    <div className="flex justify-center py-1">
-      <Speaker>Woney did not create a card: </Speaker>
+    <div className="flex gap-3">
+      <Speaker>Tool call: </Speaker>
 
-      <div className="w-full max-w-[21rem] rounded-xl border border-dashed border-foil/30 bg-transparent p-4 text-center">
-        <ShieldAlert className="mx-auto size-4 text-foil/70" aria-hidden />
+      <span
+        className={cn(
+          'mt-1.5 size-1.5 shrink-0 rounded-full',
+          held ? 'bg-foil' : 'bg-signal',
+        )}
+        aria-hidden
+      />
 
-        <p className="mt-2.5 text-sm font-semibold tracking-[-0.01em] text-bone">
-          No card created
-        </p>
-        <p className="mt-1 font-mono text-xs leading-relaxed text-bone-dim tabular-nums">
-          {money(entry.amount)} {entry.reason}
-        </p>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+          <code className="font-mono text-[0.8125rem] text-bone">
+            {entry.tool}
+          </code>
+          <Badge
+            variant="outline"
+            className={cn(
+              'rule-mono border-transparent px-1.5 py-0',
+              held ? 'bg-foil/12 text-foil' : 'bg-signal/12 text-signal',
+            )}
+          >
+            {held ? 'Needs approval' : 'Done'}
+          </Badge>
+        </div>
 
-        <p className="rule-mono mt-3 border-t border-foil/12 pt-3 text-foil/80">
-          Waiting for your approval
+        <p className="mt-1 font-mono text-xs leading-relaxed break-words text-bone-dim tabular-nums">
+          {entry.result}
         </p>
       </div>
     </div>
