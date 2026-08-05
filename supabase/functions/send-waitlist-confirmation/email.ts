@@ -10,19 +10,38 @@
  *     site's Instrument Serif degrades to Georgia — close enough in colour
  *     and contrast that the letter still reads as the same object.
  *
- * The palette matches the landing page. Dark backgrounds are declared with
- * both `bgcolor` and inline `background-color` so clients that drop one still
- * honour the other, and every text colour is set explicitly so a client
- * forcing dark mode cannot leave dark text on a dark panel.
+ * THE PALETTE IS THE SITE'S, MEASURED. These values were sampled from the
+ * built stylesheet by painting each token onto a canvas and reading the pixel,
+ * because computed styles serialise as `oklch` and cannot be pasted into an
+ * email. The previous set was warm neutral grey while the site is blue-tinted,
+ * so the letter read as a different company's. `--line` is white at 9%, which
+ * email cannot rely on, so it is flattened against the panel here.
+ *
+ * Dark backgrounds are declared with both `bgcolor` and inline
+ * `background-color` so a client that drops one still honours the other, and
+ * every text colour is set explicitly so a client forcing dark mode cannot
+ * leave dark text on a dark panel.
+ *
+ * THE COPY IS THE PAGE'S, DELIBERATELY. The second paragraph is the wording of
+ * How it works step three and the first of the six controls, near enough word
+ * for word. Someone joins the list, reads the page, and gets this a minute
+ * later: hearing the same sentences is the point, not a shortage of them.
  */
 
-const INK = '#0b0b0c'
-const PANEL = '#111113'
-const BONE = '#eceae5'
-const BONE_DIM = '#a4a09a'
-const BONE_FAINT = '#6f6b66'
-const FOIL = '#d8b878'
-const LINE = '#26262a'
+const INK_DEEP = '#03050a'
+const INK = '#070a10'
+const BONE = '#f3f0e8'
+const BONE_DIM = '#a7abb3'
+const BONE_FAINT = '#82868f'
+const FOIL = '#e5ca98'
+const LINE = '#1d2025'
+
+/** Foil at roughly a quarter strength over ink, flattened. Email cannot rely
+ *  on rgba, and a hairline is the whole difference between a credential and a
+ *  box. */
+const FOIL_LINE = '#3e3a32'
+
+const LINKEDIN = 'https://www.linkedin.com/company/woney-ai/'
 
 export type ConfirmationEmail = {
   subject: string
@@ -30,82 +49,169 @@ export type ConfirmationEmail = {
   text: string
 }
 
-export function confirmationEmail(): ConfirmationEmail {
+/**
+ * The address is printed back on the pass, so it reaches HTML and has to be
+ * escaped. The insert policy already rejects `<`, `>`, `"` and whitespace in
+ * an address, which makes this the second lock on the same door rather than
+ * the first — and the one that keeps holding if that policy is ever loosened.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+export function confirmationEmail(recipient: string): ConfirmationEmail {
   return {
     subject: 'You are on the Woney list',
-    text: TEXT,
-    html: HTML,
+    text: text(recipient),
+    html: html(escapeHtml(recipient)),
   }
 }
 
-const TEXT = `YOU ARE ON THE LIST
+const text = (recipient: string) => `You are on the list.
 
-Woney issues a single-use virtual card for every purchase, so an AI
-agent can check out at any ecommerce merchant on your behalf — locked
-to one store, one amount, one transaction. The card dies with the
-payment, so there is nothing left for anyone to reuse.
+Woney gives your agent a way to pay that is never your card. Each
+purchase gets its own card, for one store and one amount. Once the
+payment goes through, the card stops working.
 
-We are opening access in rolling batches. When yours comes up, this is
-the address we will write to. There is nothing else for you to do.
+  ACCESS PASS
+  Holder   ${recipient}
+  Status   On the list
+  Access   Rolling batches
 
-If you want to tell us what you would point an agent at first, reply to
-this message. A person reads them.
+We are opening access in batches. When yours comes up, this is the
+address we will write to.
 
-— Woney
-  woney.ai
+Until then, you can watch it take shape. We post what we are building
+on LinkedIn:
+
+  ${LINKEDIN}
+
+If you want to tell us what you would point an agent at first, just
+reply. A person reads them.
+
+woney.ai
 
 You are receiving this because you joined the waitlist at woney.ai.`
 
-const HTML = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK}" style="background-color:${INK};margin:0;padding:0;width:100%;">
+const html = (
+  recipient: string,
+) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
   <tr>
     <td align="center" style="padding:40px 16px;">
 
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%;">
 
-        <!-- Document header rule, same device as the top of the landing page -->
+        <!-- No masthead. A wordmark and a rule opened this letter, which meant
+             the mark appeared twice in the first screenful — once as chrome
+             and again on the pass a few lines below, where it is doing actual
+             work. The rule's two labels are page furniture; in an inbox the
+             sender name and the subject have already said who this is from.
+             The letter starts on the sentence the reader came for. -->
         <tr>
-          <td style="padding:0 0 14px;border-bottom:1px solid ${LINE};">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td align="left" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${BONE_FAINT};">
-                  Woney
-                </td>
-                <td align="right" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${BONE_FAINT};">
-                  Private beta &middot; 2026
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+          <td bgcolor="${INK}" style="background-color:${INK};padding:44px 40px 40px;">
 
-        <tr>
-          <td bgcolor="${PANEL}" style="background-color:${PANEL};padding:44px 40px 40px;">
-
-            <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:1.08;letter-spacing:-0.01em;font-weight:400;color:${BONE};">
+            <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:1.08;letter-spacing:-0.015em;font-weight:400;color:${BONE};">
               You are on<br />
               <em style="color:${FOIL};font-style:italic;">the list.</em>
             </h1>
 
             <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
-              Woney issues a
-              <span style="color:${BONE};">single-use virtual card</span>
-              for every purchase, so an AI agent can check out at any ecommerce
-              merchant on your behalf &mdash; locked to one store, one amount,
-              one transaction. The card dies with the payment, so there is
-              nothing left for anyone to reuse.
+              Woney gives your agent a way to pay that is
+              <span style="color:${BONE};">never your card</span>. Each purchase
+              gets its own card, for one store and one amount. Once the payment
+              goes through, the card stops working.
             </p>
 
-            <p style="margin:20px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
-              We are opening access in rolling batches. When yours comes up,
-              this is the address we will write to. There is nothing else for
-              you to do.
+            <!-- The pass. A confirmation is the one place an object belongs:
+                 the reader has just handed over an address, and a credential
+                 with their name on it is an exchange rather than an
+                 announcement. It carries no number, no date and no queue
+                 position — only what is true. -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;">
+              <tr>
+                <td bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};border:1px solid ${FOIL_LINE};padding:22px 24px;">
+
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="left" style="font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1;color:${BONE};">
+                        woney<span style="color:${FOIL};">.</span>
+                      </td>
+                      <td align="right" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${FOIL};">
+                        Access pass
+                      </td>
+                    </tr>
+                  </table>
+
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;border-top:1px solid ${FOIL_LINE};">
+                    <tr>
+                      <td style="padding:16px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
+                        Holder
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:14px;line-height:1.4;word-break:break-all;color:${BONE};">
+                        ${recipient}
+                      </td>
+                    </tr>
+                  </table>
+
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;">
+                    <tr>
+                      <td width="50%" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
+                        Status
+                      </td>
+                      <td width="50%" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
+                        Access
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:13px;color:${BONE_DIM};">
+                        On the list
+                      </td>
+                      <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:13px;color:${BONE_DIM};">
+                        Rolling batches
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+              We are opening access in batches. When yours comes up, this is
+              the address we will write to.
             </p>
+
+            <!-- This used to end on "there is nothing else for you to do",
+                 which is accurate and closes the door: it tells someone the
+                 relationship is over until an unspecified day. The waiting is
+                 the same either way, so give them somewhere to spend it. -->
+            <p style="margin:20px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+              Until then, you can watch it take shape. We post what we are
+              building on LinkedIn.
+            </p>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;">
+              <tr>
+                <td bgcolor="${FOIL}" style="background-color:${FOIL};">
+                  <a href="${LINKEDIN}" style="display:inline-block;padding:15px 24px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:14px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
+                    Follow Woney &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;border-top:1px solid ${LINE};">
               <tr>
                 <td style="padding:24px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:${BONE_DIM};">
                   If you want to tell us what you would point an agent at
-                  first, just reply to this message.
+                  first, just reply.
                   <span style="color:${BONE};">A person reads them.</span>
                 </td>
               </tr>
