@@ -72,9 +72,7 @@ export function confirmationEmail(recipient: string): ConfirmationEmail {
   }
 }
 
-const text = (recipient: string) => `WONEY — AGENTIC PAYMENTS INFRASTRUCTURE
-
-You are on the list.
+const text = (recipient: string) => `You are on the list.
 
 Woney gives your agent a way to pay that is never your card. Each
 purchase gets its own card, for one store and one amount. Once the
@@ -91,7 +89,7 @@ address we will write to.
 Until then, you can watch it take shape. We post what we are building
 on LinkedIn:
 
-  https://www.linkedin.com/company/woney-ai/
+  ${LINKEDIN}
 
 If you want to tell us what you would point an agent at first, just
 reply. A person reads them.
@@ -100,38 +98,20 @@ woney.ai
 
 You are receiving this because you joined the waitlist at woney.ai.`
 
-const html = (recipient: string) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
+const html = (
+  recipient: string,
+) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
   <tr>
     <td align="center" style="padding:40px 16px;">
 
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%;">
 
-        <!-- The wordmark, set the way the site header sets it: serif, with the
-             foil full stop that is the only mark Woney has. It used to be the
-             name in uppercase mono, which is the site's label voice, not its
-             signature. -->
-        <tr>
-          <td style="padding:0 0 18px;">
-            <span style="font-family:Georgia,'Times New Roman',serif;font-size:26px;line-height:1;color:${BONE};">woney<span style="color:${FOIL};">.</span></span>
-          </td>
-        </tr>
-
-        <!-- The rule across the top of the page, carried over intact. -->
-        <tr>
-          <td style="padding:0 0 14px;border-bottom:1px solid ${LINE};">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td align="left" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
-                  Agentic payments infrastructure
-                </td>
-                <td align="right" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
-                  Private beta &middot; 2026
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
+        <!-- No masthead. A wordmark and a rule opened this letter, which meant
+             the mark appeared twice in the first screenful — once as chrome
+             and again on the pass a few lines below, where it is doing actual
+             work. The rule's two labels are page furniture; in an inbox the
+             sender name and the subject have already said who this is from.
+             The letter starts on the sentence the reader came for. -->
         <tr>
           <td bgcolor="${INK}" style="background-color:${INK};padding:44px 40px 40px;">
 
@@ -220,7 +200,7 @@ const html = (recipient: string) => `<table role="presentation" width="100%" cel
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;">
               <tr>
                 <td bgcolor="${FOIL}" style="background-color:${FOIL};">
-                  <a href="${LINKEDIN}" style="display:inline-block;padding:12px 22px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
+                  <a href="${LINKEDIN}" style="display:inline-block;padding:15px 24px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:14px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
                     Follow Woney &rarr;
                   </a>
                 </td>
