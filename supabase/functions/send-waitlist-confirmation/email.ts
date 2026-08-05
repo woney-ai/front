@@ -41,6 +41,8 @@ const LINE = '#1d2025'
  *  box. */
 const FOIL_LINE = '#3e3a32'
 
+const LINKEDIN = 'https://www.linkedin.com/company/woney-ai/'
+
 export type ConfirmationEmail = {
   subject: string
   html: string
@@ -84,7 +86,12 @@ payment goes through, the card stops working.
   Access   Rolling batches
 
 We are opening access in batches. When yours comes up, this is the
-address we will write to. There is nothing else for you to do.
+address we will write to.
+
+Until then, you can watch it take shape. We post what we are building
+on LinkedIn:
+
+  https://www.linkedin.com/company/woney-ai/
 
 If you want to tell us what you would point an agent at first, just
 reply. A person reads them.
@@ -198,9 +205,27 @@ const html = (recipient: string) => `<table role="presentation" width="100%" cel
 
             <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
               We are opening access in batches. When yours comes up, this is
-              the address we will write to. There is nothing else for you to
-              do.
+              the address we will write to.
             </p>
+
+            <!-- This used to end on "there is nothing else for you to do",
+                 which is accurate and closes the door: it tells someone the
+                 relationship is over until an unspecified day. The waiting is
+                 the same either way, so give them somewhere to spend it. -->
+            <p style="margin:20px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+              Until then, you can watch it take shape. We post what we are
+              building on LinkedIn.
+            </p>
+
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;">
+              <tr>
+                <td bgcolor="${FOIL}" style="background-color:${FOIL};">
+                  <a href="${LINKEDIN}" style="display:inline-block;padding:12px 22px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
+                    Follow Woney &rarr;
+                  </a>
+                </td>
+              </tr>
+            </table>
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;border-top:1px solid ${LINE};">
               <tr>
