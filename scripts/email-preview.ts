@@ -24,6 +24,16 @@ import { confirmationEmail } from '../supabase/functions/send-waitlist-confirmat
 const OUT_DIR = new URL('../.email-preview/', import.meta.url)
 
 const recipient = Bun.argv[2] ?? 'you@company.com'
+
+/** The wrapper prints the address too, and the address comes from argv. The
+ *  email itself escapes it; this page had not, which made the preview the one
+ *  place a bracket in an address could break out of its element. */
+const escape = (v: string) =>
+  v
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 const { subject, html, text } = confirmationEmail(recipient)
 
 // A mail client gives the message a light chrome and a fixed viewport. Wrapping
@@ -31,7 +41,7 @@ const { subject, html, text } = confirmationEmail(recipient)
 // float on a dark page, which is not how anyone will meet it.
 const page = `<!doctype html>
 <meta charset="utf-8" />
-<title>${subject}</title>
+<title>${escape(subject)}</title>
 <style>
   body { margin: 0; background: #e9e9ec; font: 14px/1.5 ui-sans-serif, system-ui, sans-serif; }
   .chrome { max-width: 700px; margin: 0 auto; padding: 28px 0 56px; }
@@ -45,7 +55,7 @@ const page = `<!doctype html>
 <div class="chrome">
   <div class="meta">
     <div><b>Subject</b> &nbsp; ${subject}</div>
-    <div><b>To</b> &nbsp; ${recipient}</div>
+    <div><b>To</b> &nbsp; ${escape(recipient)}</div>
   </div>
   <div class="frame">${html}</div>
 </div>`
@@ -56,12 +66,14 @@ await Bun.write(
   `Subject: ${subject}\nTo: ${recipient}\n\n${text}`,
 )
 
-const path = new URL('index.html', OUT_DIR).pathname
+// `pathname` percent-encodes, so a directory containing a space would be
+// handed to the shell as %20 and `open` would quietly find nothing.
+const path = Bun.fileURLToPath(new URL('index.html', OUT_DIR))
 
 console.log(`subject   ${subject}`)
 console.log(`recipient ${recipient}`)
 console.log(`html      ${path}`)
-console.log(`text      ${new URL('plain.txt', OUT_DIR).pathname}`)
+console.log(`text      ${Bun.fileURLToPath(new URL('plain.txt', OUT_DIR))}`)
 
 if (!Bun.env.CI) {
   await Bun.$`open ${path}`.nothrow()
