@@ -61,7 +61,7 @@ const TRANSCRIPT: Entry[] = [
   },
   {
     kind: 'tool',
-    tool: 'woney · create_card',
+    tool: 'woney · issue_card',
     result: `northwind.shop · ${money(SPENT)} · single use`,
     status: 'done',
   },
@@ -82,7 +82,7 @@ const TRANSCRIPT: Entry[] = [
   // and it is the moment the product is worth the most.
   {
     kind: 'tool',
-    tool: 'woney · create_card',
+    tool: 'woney · issue_card',
     result: `${money(BLOCKED_AMOUNT)} · would pass your $${DAILY_LIMIT} daily limit`,
     status: 'held',
   },
@@ -112,7 +112,7 @@ export function AgentSession() {
           ref={ref}
           className="mt-12 overflow-hidden rounded-xl border border-line bg-ink-deep shadow-[0_40px_80px_-40px_oklch(0_0_0/80%)]"
         >
-          <SpendMeter />
+          <SessionBar />
 
           {/* Every entry is always rendered. The stagger is CSS, driven off
               `data-sequenced`, so the transcript exists in the prerendered HTML
@@ -152,46 +152,24 @@ export function AgentSession() {
 }
 
 /**
- * The day's spending, drawn.
+ * The window chrome, and only that.
  *
- * The header used to say "Daily limit $500 · $142.60 used" and leave the
- * reader to do the arithmetic that makes the refusal below make sense. Drawn,
- * the whole argument is one glance: this much is gone, that much is left, and
- * the purchase the agent is about to ask for does not fit in the gap.
+ * A spend meter lived here for a while — a bar showing the day's total with
+ * the blocked purchase spilling past the limit. It read well and it was
+ * wrong: chat clients and terminals do not carry dashboards above the thread.
+ * It made the frame look like a product screenshot rather than the window an
+ * agent conversation actually happens in.
+ *
+ * The arithmetic it was there to explain is carried by the transcript itself,
+ * where the refusal names the limit it would have crossed.
  */
-function SpendMeter() {
-  // The bar is the limit. What the blocked purchase needed beyond it is drawn
-  // past the end, spilling — the geometry makes the argument before the words
-  // do. Widths are scaled so the bar plus the spill fill the row, which keeps
-  // the bar an honest 100% of the limit rather than silently compressing to
-  // fit an overflow inside itself.
-  const spentPct = (SPENT / DAILY_LIMIT) * 100
-  const fitsPct = 100 - spentPct
-  const overPct = ((SPENT + BLOCKED_AMOUNT - DAILY_LIMIT) / DAILY_LIMIT) * 100
-  const barShare = 100 / (100 + overPct)
-
+function SessionBar() {
   return (
-    <div className="border-b border-line bg-white/[0.02] px-5 py-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <span className="rule-mono text-bone-faint">Agent session</span>
-        <span className="rule-mono text-bone-dim tabular-nums">
-          {money(SPENT)} of ${DAILY_LIMIT} today
-        </span>
-      </div>
-
-      <div className="mt-2.5 flex h-1.5 items-stretch gap-[3px]" aria-hidden>
-        <div
-          className="flex overflow-hidden rounded-full bg-white/[0.06]"
-          style={{ width: `${barShare * 100}%` }}
-        >
-          {/* Spent, then the room still left — which is exactly the room the
-              next purchase did not fit into. */}
-          <span className="bg-foil" style={{ width: `${spentPct}%` }} />
-          <span className="bg-foil/20" style={{ width: `${fitsPct}%` }} />
-        </div>
-
-        <span className="flex-1 rounded-full bg-[repeating-linear-gradient(115deg,oklch(0.72_0.15_25/70%)_0_2px,transparent_2px_5px)]" />
-      </div>
+    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line bg-white/[0.02] px-5 py-3">
+      <span className="rule-mono text-bone-faint">Agent session</span>
+      <span className="rule-mono text-bone-faint tabular-nums">
+        Daily limit ${DAILY_LIMIT}
+      </span>
     </div>
   )
 }
@@ -291,7 +269,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
             variant="outline"
             className={cn(
               'rule-mono border-transparent px-1.5 py-0',
-              held ? 'bg-foil/12 text-foil' : 'bg-signal/12 text-signal',
+              held ? 'bg-foil/18 text-foil' : 'bg-signal/18 text-signal',
             )}
           >
             {held ? 'Needs approval' : 'Done'}
