@@ -47,8 +47,12 @@ const capabilities = [
 ]
 
 export function Capabilities() {
+  // Deep ground, matching How it works. The page alternates flat and deep so
+  // each section reads as its own plate; removing the audiences section left
+  // this one and the transcript above it sharing a ground, which collapsed
+  // two sections into a single long field.
   return (
-    <section className="border-t border-line">
+    <section className="border-t border-line bg-ink-deep">
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <SectionHeading index="Controls" title="The card is the control.">
           {/* The whole argument for the product, in two sentences. The version
