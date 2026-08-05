@@ -1,6 +1,7 @@
 import { ShoppingCart, User } from 'lucide-react'
 
 import { Wordmark } from '@/components/brand/wordmark'
+import { Message, MessageAvatar, MessageContent } from '@/components/ui/message'
 import { Badge } from '@/components/ui/badge'
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
 import { cn } from '@/lib/utils'
@@ -142,7 +143,6 @@ export function AgentSession() {
               from exactly the machines it was written for. */}
           <ol
             aria-label="Example session between a person and their agent"
-            aria-describedby="session-note"
             className="flex flex-col gap-3 px-4 py-5 sm:gap-3.5 sm:px-6 sm:py-6"
             data-sequenced={started || undefined}
           >
@@ -163,15 +163,10 @@ export function AgentSession() {
           </ol>
         </div>
 
-        {/* Referenced by the list's aria-describedby, so "these are made-up
-            figures" reaches a screen reader before the numbers do rather than
-            arriving as an afterthought below them. */}
-        <p
-          id="session-note"
-          className="mt-5 text-center text-[0.8125rem] text-bone-faint"
-        >
-          Sample identifiers and amounts.
-        </p>
+        {/* No caption. "Sample identifiers and amounts" told the reader
+            something the lead above already establishes — this is what a
+            session looks like — and northwind.shop is not a claim anyone will
+            mistake for a real order of theirs. */}
       </div>
     </section>
   )
@@ -246,15 +241,22 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   // anyone's turn.
   if (entry.kind === 'user') {
     return (
-      <div className="chat-step flex justify-end gap-3">
+      <Message align="end" className="chat-step">
         <Speaker>You said: </Speaker>
-        <p className="max-w-[85%] rounded-xl rounded-br-sm bg-surface px-4 py-2.5 text-[0.9375rem] leading-relaxed text-bone sm:max-w-[70%]">
-          {entry.text}
-        </p>
-        <Avatar>
+        <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <User className="size-3.5 text-bone-dim" aria-hidden />
-        </Avatar>
-      </div>
+        </MessageAvatar>
+        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+          {/* w-fit and self-end because MessageContent is full width and its
+              own end-alignment rule only reaches children carrying a
+              data-slot. Without these the bubble stretches to the cap instead
+              of hugging its text, which is the one thing a chat bubble has to
+              do. */}
+          <p className="w-fit self-end rounded-xl rounded-br-sm bg-surface px-4 py-2.5 text-[0.9375rem] leading-relaxed text-bone">
+            {entry.text}
+          </p>
+        </MessageContent>
+      </Message>
     )
   }
 
@@ -265,15 +267,17 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
             of the flow, so nothing shifts when it goes. */}
         <TypingDots />
 
-        <div className="chat-step flex gap-3">
+        <Message className="chat-step">
           <Speaker>Your agent said: </Speaker>
-          <Avatar className="border-foil/30 bg-foil/10">
+          <MessageAvatar className="size-7 self-start border border-foil/30 bg-foil/10">
             <Wordmark variant="monogram" />
-          </Avatar>
-          <p className="max-w-[85%] pt-1 text-[0.9375rem] leading-relaxed text-bone-dim sm:max-w-[70%]">
-            {entry.text}
-          </p>
-        </div>
+          </MessageAvatar>
+          <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+            <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-dim">
+              {entry.text}
+            </p>
+          </MessageContent>
+        </Message>
       </>
     )
   }
@@ -283,15 +287,17 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
   // should look like a capability of ours.
   if (entry.kind === 'store') {
     return (
-      <div className="chat-step flex gap-3">
+      <Message className="chat-step">
         <Speaker>At the store: </Speaker>
-        <Avatar>
+        <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
-        </Avatar>
-        <p className="max-w-[85%] pt-1 text-[0.9375rem] leading-relaxed text-bone-faint italic sm:max-w-[70%]">
-          {entry.text}
-        </p>
-      </div>
+        </MessageAvatar>
+        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+          <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-faint italic">
+            {entry.text}
+          </p>
+        </MessageContent>
+      </Message>
     )
   }
 
@@ -339,25 +345,5 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
         </p>
       </div>
     </div>
-  )
-}
-
-function Avatar({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <span
-      className={cn(
-        'flex size-7 shrink-0 items-center justify-center rounded-full border border-line bg-white/[0.04]',
-        className,
-      )}
-      aria-hidden
-    >
-      {children}
-    </span>
   )
 }
