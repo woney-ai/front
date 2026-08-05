@@ -1,4 +1,4 @@
-import { CreditCard, ShieldAlert, ShoppingCart, User } from 'lucide-react'
+import { ShieldAlert, ShoppingCart, User } from 'lucide-react'
 
 import { Wordmark } from '@/components/brand/wordmark'
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
@@ -37,16 +37,19 @@ import { SectionHeading } from './section-heading'
  * stop outside it, and a way to say yes.
  */
 
+const DAILY_LIMIT = 500
+const SPENT = 142.6
+const BLOCKED_AMOUNT = 399
+
+const money = (n: number) =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
+
 type Entry =
   | { kind: 'user'; text: string }
   | { kind: 'agent'; text: string }
   | { kind: 'store'; text: string }
-  | {
-      kind: 'event'
-      status: 'issued' | 'blocked'
-      label: string
-      detail: string
-    }
+  | { kind: 'card'; merchant: string; amount: number; last4: string }
+  | { kind: 'blocked'; amount: number; reason: string }
 
 const TRANSCRIPT: Entry[] = [
   {
@@ -58,10 +61,10 @@ const TRANSCRIPT: Entry[] = [
     text: 'Found them at northwind.shop — $142.60 including shipping. That is inside my limit, so I can handle it.',
   },
   {
-    kind: 'event',
-    status: 'issued',
-    label: 'Card created',
-    detail: 'northwind.shop · $142.60 · one use',
+    kind: 'card',
+    merchant: 'northwind.shop',
+    amount: SPENT,
+    last4: '4408',
   },
   {
     kind: 'store',
@@ -79,10 +82,9 @@ const TRANSCRIPT: Entry[] = [
   // what today already spent — saying so is what makes the example legible,
   // and it is the moment the product is worth the most.
   {
-    kind: 'event',
-    status: 'blocked',
-    label: 'Needs your approval',
-    detail: '$399.00 would take you past your $500 daily limit',
+    kind: 'blocked',
+    amount: BLOCKED_AMOUNT,
+    reason: 'would take you past your $500 daily limit',
   },
   {
     kind: 'agent',
@@ -110,13 +112,7 @@ export function AgentSession() {
           ref={ref}
           className="mt-12 overflow-hidden rounded-xl border border-line bg-ink-deep shadow-[0_40px_80px_-40px_oklch(0_0_0/80%)]"
         >
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line bg-white/[0.02] px-5 py-3">
-            <span className="rule-mono text-bone-faint">Agent session</span>
-            <span className="rule-mono flex items-center gap-2 text-bone-faint">
-              <span className="size-1.5 rounded-full bg-signal" aria-hidden />
-              Daily limit $500 · $142.60 used
-            </span>
-          </div>
+          <SpendMeter />
 
           {/* Every entry is always rendered. The stagger is CSS, driven off
               `data-sequenced`, so the transcript exists in the prerendered HTML
@@ -152,6 +148,51 @@ export function AgentSession() {
         </p>
       </div>
     </section>
+  )
+}
+
+/**
+ * The day's spending, drawn.
+ *
+ * The header used to say "Daily limit $500 · $142.60 used" and leave the
+ * reader to do the arithmetic that makes the refusal below make sense. Drawn,
+ * the whole argument is one glance: this much is gone, that much is left, and
+ * the purchase the agent is about to ask for does not fit in the gap.
+ */
+function SpendMeter() {
+  // The bar is the limit. What the blocked purchase needed beyond it is drawn
+  // past the end, spilling — the geometry makes the argument before the words
+  // do. Widths are scaled so the bar plus the spill fill the row, which keeps
+  // the bar an honest 100% of the limit rather than silently compressing to
+  // fit an overflow inside itself.
+  const spentPct = (SPENT / DAILY_LIMIT) * 100
+  const fitsPct = 100 - spentPct
+  const overPct = ((SPENT + BLOCKED_AMOUNT - DAILY_LIMIT) / DAILY_LIMIT) * 100
+  const barShare = 100 / (100 + overPct)
+
+  return (
+    <div className="border-b border-line bg-white/[0.02] px-5 py-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <span className="rule-mono text-bone-faint">Agent session</span>
+        <span className="rule-mono text-bone-dim tabular-nums">
+          {money(SPENT)} of ${DAILY_LIMIT} today
+        </span>
+      </div>
+
+      <div className="mt-2.5 flex h-1.5 items-stretch gap-[3px]" aria-hidden>
+        <div
+          className="flex overflow-hidden rounded-full bg-white/[0.06]"
+          style={{ width: `${barShare * 100}%` }}
+        >
+          {/* Spent, then the room still left — which is exactly the room the
+              next purchase did not fit into. */}
+          <span className="bg-foil" style={{ width: `${spentPct}%` }} />
+          <span className="bg-foil/20" style={{ width: `${fitsPct}%` }} />
+        </div>
+
+        <span className="flex-1 rounded-full bg-[repeating-linear-gradient(115deg,oklch(0.72_0.15_25/70%)_0_2px,transparent_2px_5px)]" />
+      </div>
+    </div>
   )
 }
 
@@ -218,33 +259,69 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
     )
   }
 
-  const blocked = entry.status === 'blocked'
+  // The card, drawn rather than described. The product's whole argument is an
+  // object — a card that exists for one purchase — and the demo was spending
+  // its strongest moment on a line of text. Same face as the hero card: matte
+  // black, foil hairline, engraved field.
+  if (entry.kind === 'card') {
+    return (
+      <div className="flex justify-center py-1">
+        <Speaker>Woney created a card: </Speaker>
 
-  // Not speech. Full width, inset, railed — an instrument reading, not a turn
-  // in the conversation.
+        <figure className="engraving w-full max-w-[21rem] rounded-xl bg-[oklch(0.205_0.015_265)] p-4 shadow-[0_0_40px_-16px_oklch(0.85_0.072_82/22%),0_20px_40px_-18px_oklch(0_0_0/95%)] ring-1 ring-foil/20">
+          <figcaption className="flex items-baseline justify-between">
+            <Wordmark variant="card" />
+            <span className="rule-mono text-foil/80">Single use</span>
+          </figcaption>
+
+          <p className="mt-4 font-mono text-[0.9375rem] text-bone tabular-nums">
+            <span className="text-bone-faint">•••• •••• •••• </span>
+            {entry.last4}
+          </p>
+
+          <dl className="mt-4 grid grid-cols-[1.5fr_1fr_auto] gap-3 border-t border-foil/12 pt-3">
+            {[
+              ['Merchant', entry.merchant],
+              ['Amount', money(entry.amount)],
+              ['Uses', '0 / 1'],
+            ].map(([term, value]) => (
+              <div key={term} className="min-w-0">
+                <dt className="rule-mono text-bone-faint">{term}</dt>
+                <dd className="mt-1 truncate font-mono text-[0.8125rem] text-bone-dim tabular-nums">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </figure>
+      </div>
+    )
+  }
+
+  // And its opposite: the shape of the card that was not made. An outline with
+  // nothing inside says "no card exists for this" in a way no sentence does —
+  // and it is the same idea the mark is built on, a thing defined by absence.
   //
-  // Both rails are foil, including the one that stops a purchase. Red would
-  // read as failure, and nothing failed: the limit held, and there is a way
-  // to say yes. The icon and the label carry the difference, so the meaning
-  // does not depend on colour — which is also what stops it disappearing for
-  // a reader who cannot distinguish the two.
+  // Not red. Nothing failed here: the limit held and there is a way to say
+  // yes. The label and the icon carry the meaning, so it never rests on a
+  // colour some readers cannot separate.
   return (
-    <div className="flex items-center gap-3.5 rounded-lg border border-line border-l-2 border-l-foil bg-black/25 px-4 py-3">
-      <Speaker>Woney: </Speaker>
+    <div className="flex justify-center py-1">
+      <Speaker>Woney did not create a card: </Speaker>
 
-      {blocked ? (
-        <ShieldAlert className="size-4 shrink-0 text-foil" aria-hidden />
-      ) : (
-        <CreditCard className="size-4 shrink-0 text-foil" aria-hidden />
-      )}
+      <div className="w-full max-w-[21rem] rounded-xl border border-dashed border-foil/30 bg-transparent p-4 text-center">
+        <ShieldAlert className="mx-auto size-4 text-foil/70" aria-hidden />
 
-      <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-3">
-        <span className="block text-sm font-semibold tracking-[-0.01em] text-bone">
-          {entry.label}
-        </span>
-        <span className="mt-1 block font-mono text-xs leading-relaxed break-words text-bone-dim tabular-nums sm:mt-0">
-          {entry.detail}
-        </span>
+        <p className="mt-2.5 text-sm font-semibold tracking-[-0.01em] text-bone">
+          No card created
+        </p>
+        <p className="mt-1 font-mono text-xs leading-relaxed text-bone-dim tabular-nums">
+          {money(entry.amount)} {entry.reason}
+        </p>
+
+        <p className="rule-mono mt-3 border-t border-foil/12 pt-3 text-foil/80">
+          Waiting for your approval
+        </p>
       </div>
     </div>
   )
