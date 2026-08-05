@@ -65,29 +65,26 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Stops the client turning the address on the pass into a mailto link.
+ * Stops the client restyling the address on the pass.
  *
- * Gmail and others scan text for anything shaped like an address and linkify
- * it, which arrives as blue underlined text that overrides the colour set on
- * the cell. On a credential that is the difference between an engraved field
- * and a hyperlink someone left in.
+ * Gmail scans text for anything shaped like an address and linkifies it, which
+ * arrives as blue underlined text overriding the colour set on the cell. On a
+ * credential that is the difference between an engraved field and a hyperlink
+ * someone left in.
  *
- * Wrapping the `@` in its own element breaks the pattern the scanner matches
- * without touching the address: it renders identically, copies identically,
- * and reads identically to a screen reader, because a span contributes nothing
- * to the text content.
+ * The first attempt put the `@` in its own element to break the pattern. It
+ * broke that one and created two: with the address split, the scanner found
+ * `example.com` on each side and linkified both halves as domains instead.
+ * Worse than before, and a good reminder that these detectors match several
+ * shapes, not one.
  *
- * The value arriving here is already escaped, and `@` is not a character the
- * escape touches, so splitting on it is safe.
+ * What works is giving the client nothing to do. Text already inside an anchor
+ * is not scanned again, so the address is wrapped in one we author, with the
+ * colour on an inner span where no client stylesheet reaches it. The anchor
+ * carries no href: it is not a destination, it is a fence.
  */
 function unlinkable(escapedAddress: string): string {
-  const at = escapedAddress.lastIndexOf('@')
-  if (at === -1) return escapedAddress
-
-  const local = escapedAddress.slice(0, at)
-  const domain = escapedAddress.slice(at + 1)
-
-  return `${local}<span>@</span>${domain}`
+  return `<a style="color:${BONE};text-decoration:none;"><span style="color:${BONE};text-decoration:none;">${escapedAddress}</span></a>`
 }
 
 export function confirmationEmail(recipient: string): ConfirmationEmail {
