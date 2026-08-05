@@ -64,11 +64,37 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
+/**
+ * Stops the client turning the address on the pass into a mailto link.
+ *
+ * Gmail and others scan text for anything shaped like an address and linkify
+ * it, which arrives as blue underlined text that overrides the colour set on
+ * the cell. On a credential that is the difference between an engraved field
+ * and a hyperlink someone left in.
+ *
+ * Wrapping the `@` in its own element breaks the pattern the scanner matches
+ * without touching the address: it renders identically, copies identically,
+ * and reads identically to a screen reader, because a span contributes nothing
+ * to the text content.
+ *
+ * The value arriving here is already escaped, and `@` is not a character the
+ * escape touches, so splitting on it is safe.
+ */
+function unlinkable(escapedAddress: string): string {
+  const at = escapedAddress.lastIndexOf('@')
+  if (at === -1) return escapedAddress
+
+  const local = escapedAddress.slice(0, at)
+  const domain = escapedAddress.slice(at + 1)
+
+  return `${local}<span>@</span>${domain}`
+}
+
 export function confirmationEmail(recipient: string): ConfirmationEmail {
   return {
     subject: 'You are on the Woney list',
     text: text(recipient),
-    html: html(escapeHtml(recipient)),
+    html: html(unlinkable(escapeHtml(recipient))),
   }
 }
 
