@@ -260,7 +260,7 @@ src/
   components/
     brand/       logo
     layout/      header, footer
-    sections/    hero, how-it-works, capabilities, audiences, closing-cta
+    sections/    hero, how-it-works, agent-session, capabilities, closing-cta
     ui/          shadcn primitives
   features/
     waitlist/    schema, api, form — the only real behavior on the page
