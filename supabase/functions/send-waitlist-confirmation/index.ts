@@ -132,7 +132,7 @@ async function send(
   to: string,
   rowId: string,
 ): Promise<string | null> {
-  const { subject, html, text } = confirmationEmail()
+  const { subject, html, text } = confirmationEmail(to)
 
   const response = await fetch(RESEND_ENDPOINT, {
     method: 'POST',

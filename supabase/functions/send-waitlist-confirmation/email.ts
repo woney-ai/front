@@ -36,27 +36,52 @@ const BONE_FAINT = '#82868f'
 const FOIL = '#e5ca98'
 const LINE = '#1d2025'
 
+/** Foil at roughly a quarter strength over ink, flattened. Email cannot rely
+ *  on rgba, and a hairline is the whole difference between a credential and a
+ *  box. */
+const FOIL_LINE = '#3e3a32'
+
 export type ConfirmationEmail = {
   subject: string
   html: string
   text: string
 }
 
-export function confirmationEmail(): ConfirmationEmail {
+/**
+ * The address is printed back on the pass, so it reaches HTML and has to be
+ * escaped. The insert policy already rejects `<`, `>`, `"` and whitespace in
+ * an address, which makes this the second lock on the same door rather than
+ * the first — and the one that keeps holding if that policy is ever loosened.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+export function confirmationEmail(recipient: string): ConfirmationEmail {
   return {
     subject: 'You are on the Woney list',
-    text: TEXT,
-    html: HTML,
+    text: text(recipient),
+    html: html(escapeHtml(recipient)),
   }
 }
 
-const TEXT = `WONEY — AGENTIC PAYMENTS INFRASTRUCTURE
+const text = (recipient: string) => `WONEY — AGENTIC PAYMENTS INFRASTRUCTURE
 
 You are on the list.
 
 Woney gives your agent a way to pay that is never your card. Each
 purchase gets its own card, for one store and one amount. Once the
 payment goes through, the card stops working.
+
+  ACCESS PASS
+  Holder   ${recipient}
+  Status   On the list
+  Access   Rolling batches
 
 We are opening access in batches. When yours comes up, this is the
 address we will write to. There is nothing else for you to do.
@@ -68,7 +93,7 @@ woney.ai
 
 You are receiving this because you joined the waitlist at woney.ai.`
 
-const HTML = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
+const html = (recipient: string) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
   <tr>
     <td align="center" style="padding:40px 16px;">
 
@@ -115,7 +140,63 @@ const HTML = `<table role="presentation" width="100%" cellpadding="0" cellspacin
               goes through, the card stops working.
             </p>
 
-            <p style="margin:20px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+            <!-- The pass. A confirmation is the one place an object belongs:
+                 the reader has just handed over an address, and a credential
+                 with their name on it is an exchange rather than an
+                 announcement. It carries no number, no date and no queue
+                 position — only what is true. -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;">
+              <tr>
+                <td bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};border:1px solid ${FOIL_LINE};padding:22px 24px;">
+
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="left" style="font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1;color:${BONE};">
+                        woney<span style="color:${FOIL};">.</span>
+                      </td>
+                      <td align="right" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${FOIL};">
+                        Access pass
+                      </td>
+                    </tr>
+                  </table>
+
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;border-top:1px solid ${FOIL_LINE};">
+                    <tr>
+                      <td style="padding:16px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
+                        Holder
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:14px;line-height:1.4;word-break:break-all;color:${BONE};">
+                        ${recipient}
+                      </td>
+                    </tr>
+                  </table>
+
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;">
+                    <tr>
+                      <td width="50%" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
+                        Status
+                      </td>
+                      <td width="50%" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
+                        Access
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:13px;color:${BONE_DIM};">
+                        On the list
+                      </td>
+                      <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:13px;color:${BONE_DIM};">
+                        Rolling batches
+                      </td>
+                    </tr>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
               We are opening access in batches. When yours comes up, this is
               the address we will write to. There is nothing else for you to
               do.
