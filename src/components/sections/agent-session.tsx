@@ -1,11 +1,4 @@
-import {
-  Check,
-  CornerDownRight,
-  ShieldAlert,
-  ShoppingCart,
-  User,
-  X,
-} from 'lucide-react'
+import { CreditCard, ShieldAlert, ShoppingCart, User } from 'lucide-react'
 
 import { Wordmark } from '@/components/brand/wordmark'
 import { useRevealSequence } from '@/hooks/use-reveal-sequence'
@@ -14,47 +7,45 @@ import { cn } from '@/lib/utils'
 import { SectionHeading } from './section-heading'
 
 /**
- * An illustrative session: what buying with Woney looks like from inside an
- * agent, under the daily limit its owner gave it. Sample data — no live
- * connection.
+ * An illustrative session: buying with Woney, seen from inside a chat.
+ * Sample data — no live connection.
  *
- * This is a product demo, not an API trace. Two rules follow from that.
+ * WHY THERE IS NO FUNCTION CALL HERE ANY MORE. This used to print
+ * `woney.issue_card` with a block of JSON arguments. Three things were wrong
+ * with that. It published an API surface that is not public yet, so a rename
+ * would leave the page lying — or worse, leave someone treating a landing
+ * page as documentation. It exposed how the product works inside, which is
+ * not for before launch. And the audience is both agent developers and people
+ * who delegate purchases to an assistant: the call signature gains a little
+ * with the first group and loses the second entirely, because code on a page
+ * reads as "not for me".
  *
- * It shows the product being built, not only what shipped this week — merchant
- * binding and the approval notification are both on the MVP path, and the
- * caption says plainly that capabilities here are in development. What it must
- * never do is present something nobody intends to build.
+ * What replaced it says the same thing as an event: the card appearing, with
+ * the store, the amount and the single use all still visible. Nothing
+ * persuasive was lost — the exact figures and the refusal are what convince.
  *
- * And it stays on the outside of the product. No hold mechanics, no error
- * codes, no internal field names: a reader should learn what the thing does,
- * not how it is wired, until there is something to log into.
+ * Two claims this must never make, because neither is true:
  *
- * Two things this transcript must never imply, because neither is true:
+ *   Woney is not an MCP server. It is payment infrastructure. How the agent
+ *   reaches it is the agent's business.
  *
- *   Woney is not an MCP server. It is payment infrastructure. The agent asks
- *   it for a card; how the agent reaches it is the agent's business.
+ *   Woney does not check out. The merchant's checkout is the same page every
+ *   shopper gets, and the agent works through it exactly as a person would.
+ *   Hence the `store` entry: that step is the one we do not do.
  *
- *   Woney does not check out. There is no `woney.checkout`, and inventing one
- *   would sell a capability that does not exist. The merchant's checkout is
- *   the same page every shopper gets, and the agent works through it exactly
- *   as a person would — unless that merchant has built something to help,
- *   which is theirs, not ours. Hence the `store` step: it is the agent
- *   labouring at a normal checkout, with no Woney in the loop.
- *
- * The transcript deliberately ends on a decline: autonomy inside the limit,
- * a hard stop outside it.
+ * The transcript ends on a refusal on purpose — autonomy inside the limit, a
+ * stop outside it, and a way to say yes.
  */
 
 type Entry =
   | { kind: 'user'; text: string }
   | { kind: 'agent'; text: string }
-  | { kind: 'store'; text: string; detail: string }
+  | { kind: 'store'; text: string }
   | {
-      kind: 'tool'
-      tool: string
-      args: Record<string, string | number>
-      status: 'ok' | 'declined'
-      result: string
+      kind: 'event'
+      status: 'issued' | 'blocked'
+      label: string
+      detail: string
     }
 
 const TRANSCRIPT: Entry[] = [
@@ -67,57 +58,37 @@ const TRANSCRIPT: Entry[] = [
     text: 'Found them at northwind.shop — $142.60 including shipping. That is inside my limit, so I can handle it.',
   },
   {
-    kind: 'tool',
-    tool: 'woney.issue_card',
-    args: {
-      amount: 142.6,
-      currency: 'USD',
-      merchant: 'northwind.shop',
-    },
-    status: 'ok',
-    result: 'card_4408 · single use · locked to northwind.shop',
+    kind: 'event',
+    status: 'issued',
+    label: 'Card created',
+    detail: 'northwind.shop · $142.60 · one use',
   },
   {
     kind: 'store',
-    text: "Paying at northwind.shop's checkout, the same one any shopper gets.",
-    detail: 'card_4408 · accepted like any card · nothing to integrate',
+    text: 'Checking out at northwind.shop, like any other customer.',
   },
   {
     kind: 'agent',
-    text: 'Ordered, arriving Thursday. The card that paid for it no longer exists.',
+    text: 'Ordered, arriving Thursday. That card does not work anymore.',
   },
   {
     kind: 'user',
     text: 'Great. Add the standing desk mat too.',
   },
+  // The amount alone is under the limit. What goes over is the amount plus
+  // what today already spent — saying so is what makes the example legible,
+  // and it is the moment the product is worth the most.
   {
-    kind: 'tool',
-    tool: 'woney.issue_card',
-    args: {
-      amount: 399.0,
-      currency: 'USD',
-      merchant: 'northwind.shop',
-    },
-    status: 'declined',
-    result: 'declined · over your limit · approval requested',
+    kind: 'event',
+    status: 'blocked',
+    label: 'Needs your approval',
+    detail: '$399.00 would take you past your $500 daily limit',
   },
   {
     kind: 'agent',
-    text: "That one is over your limit, so I can't issue a card for it. I sent it to your phone to approve.",
+    text: 'That would take you past your daily limit, so I have not bought it. I sent you a request — approve it and I will place the order.',
   },
 ]
-
-function formatArgs(args: Record<string, string | number>): string {
-  const body = Object.entries(args)
-    .map(([key, value]) => {
-      if (typeof value !== 'number') return `${key}: "${value}"`
-      // Money always carries its minor units, the way a real API would.
-      return `${key}: ${key.includes('amount') ? value.toFixed(2) : value}`
-    })
-    .join(', ')
-
-  return `{ ${body} }`
-}
 
 export function AgentSession() {
   const { ref, started } = useRevealSequence()
@@ -129,10 +100,10 @@ export function AgentSession() {
           index="In the agent"
           title="The card, not the checkout."
         >
-          Your agent still does the buying. It works through the merchant's
-          checkout the way a person would, because that is the same checkout
-          everyone gets. What it never gets is your card — it asks for one that
-          exists for that purchase and stops working after it.
+          {/* The two sections above already argued the case. This one only has
+              to show it, so the lead points at the transcript instead of
+              restating what the reader just read. */}
+          Here is what that looks like inside a chat with your agent.
         </SectionHeading>
 
         <div
@@ -153,13 +124,13 @@ export function AgentSession() {
               counter that is zero on the server, which hid this entire section
               from exactly the machines it was written for. */}
           <ol
-            className="divide-y divide-line"
+            className="flex flex-col gap-3 px-4 py-5 sm:gap-3.5 sm:px-6 sm:py-6"
             data-sequenced={started || undefined}
           >
             {TRANSCRIPT.map((entry, index) => (
               <li
                 key={index}
-                className="reveal-step px-5 py-4 sm:px-7 sm:py-5"
+                className="reveal-step"
                 style={{ '--step': index } as React.CSSProperties}
               >
                 <TranscriptEntry entry={entry} />
@@ -177,91 +148,83 @@ export function AgentSession() {
 }
 
 function TranscriptEntry({ entry }: { entry: Entry }) {
+  // What you say, what the agent answers and what actually happens are three
+  // different kinds of thing. They used to share one treatment and read as a
+  // flat list. Now speech has a side, and events have none — they are not
+  // anyone's turn.
   if (entry.kind === 'user') {
     return (
-      <div className="flex gap-3.5">
+      <div className="flex justify-end gap-3">
+        <p className="max-w-[85%] rounded-xl rounded-br-sm bg-surface px-4 py-2.5 text-[0.9375rem] leading-relaxed text-bone sm:max-w-[70%]">
+          {entry.text}
+        </p>
         <Avatar>
           <User className="size-3.5 text-bone-dim" aria-hidden />
         </Avatar>
-        <p className="pt-0.5 text-[0.9375rem] leading-relaxed text-bone">
-          {entry.text}
-        </p>
       </div>
     )
   }
 
   if (entry.kind === 'agent') {
     return (
-      <div className="flex gap-3.5">
+      <div className="flex gap-3">
         <Avatar className="border-foil/30 bg-foil/10">
           <Wordmark variant="monogram" />
         </Avatar>
-        <p className="pt-0.5 text-[0.9375rem] leading-relaxed text-bone-dim">
+        <p className="max-w-[85%] pt-1 text-[0.9375rem] leading-relaxed text-bone-dim sm:max-w-[70%]">
           {entry.text}
         </p>
       </div>
     )
   }
 
-  // The agent working the merchant's own checkout. Rendered plainly on
-  // purpose: no call signature, no arguments, nothing that could be mistaken
-  // for something Woney provides. This step is the part we do not do.
+  // The agent working the merchant's own checkout. Deliberately the plainest
+  // row on the page: this is the step Woney does not perform, so nothing here
+  // should look like a capability of ours.
   if (entry.kind === 'store') {
     return (
-      <div className="flex gap-3.5">
+      <div className="flex gap-3">
         <Avatar>
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
         </Avatar>
-
-        <div className="min-w-0 flex-1 pt-0.5">
-          <p className="text-[0.9375rem] leading-relaxed text-bone-dim">
-            {entry.text}
-          </p>
-          <p className="mt-2 font-mono text-xs text-bone-faint">
-            {entry.detail}
-          </p>
-        </div>
+        <p className="max-w-[85%] pt-1 text-[0.9375rem] leading-relaxed text-bone-faint italic sm:max-w-[70%]">
+          {entry.text}
+        </p>
       </div>
     )
   }
 
-  const declined = entry.status === 'declined'
+  const blocked = entry.status === 'blocked'
 
+  // Not speech. Full width, inset, and railed in foil or in the alarm colour —
+  // an instrument reading, not a turn in the conversation.
   return (
-    <div className="flex gap-3.5">
-      <Avatar
-        className={cn(declined && 'border-destructive/35 bg-destructive/10')}
-      >
-        {declined ? (
-          <ShieldAlert className="size-3.5 text-destructive" aria-hidden />
-        ) : (
-          <CornerDownRight className="size-3.5 text-bone-faint" aria-hidden />
-        )}
-      </Avatar>
+    <div
+      className={cn(
+        'flex items-center gap-3.5 rounded-lg border border-l-2 bg-black/25 px-4 py-3',
+        blocked
+          ? 'border-line border-l-destructive'
+          : 'border-line border-l-foil',
+      )}
+    >
+      {blocked ? (
+        <ShieldAlert className="size-4 shrink-0 text-destructive" aria-hidden />
+      ) : (
+        <CreditCard className="size-4 shrink-0 text-foil" aria-hidden />
+      )}
 
-      <div className="min-w-0 flex-1 pt-0.5">
-        <p className="font-mono text-sm text-bone">
-          <span className="text-bone-faint">call </span>
-          {entry.tool}
-        </p>
-
-        <pre className="mt-2 rounded-md border border-line bg-black/25 px-3 py-2 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-bone-dim">
-          {formatArgs(entry.args)}
-        </pre>
-
-        <p
+      <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-3">
+        <span
           className={cn(
-            'mt-2 flex items-start gap-2 font-mono text-xs',
-            declined ? 'text-destructive' : 'text-signal',
+            'block text-sm font-semibold tracking-[-0.01em]',
+            blocked ? 'text-destructive' : 'text-bone',
           )}
         >
-          {declined ? (
-            <X className="mt-px size-3.5 shrink-0" aria-hidden />
-          ) : (
-            <Check className="mt-px size-3.5 shrink-0" aria-hidden />
-          )}
-          <span className="min-w-0 break-words">{entry.result}</span>
-        </p>
+          {entry.label}
+        </span>
+        <span className="mt-1 block font-mono text-xs leading-relaxed break-words text-bone-dim sm:mt-0">
+          {entry.detail}
+        </span>
       </div>
     </div>
   )
