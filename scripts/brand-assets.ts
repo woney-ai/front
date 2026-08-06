@@ -37,10 +37,23 @@ const engraving = `
     ${INK_DEEP};
 `
 
-const fonts = `
-  @font-face { font-family: 'Instrument Serif'; src: url('${new URL('../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2', import.meta.url)}') format('woff2'); }
-  @font-face { font-family: 'IBM Plex Mono'; src: url('${new URL('../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2', import.meta.url)}') format('woff2'); }
-`
+const FONT_FILES = {
+  'Instrument Serif': new URL(
+    '../node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2',
+    import.meta.url,
+  ),
+  'IBM Plex Mono': new URL(
+    '../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2',
+    import.meta.url,
+  ),
+}
+
+const fonts = Object.entries(FONT_FILES)
+  .map(
+    ([family, url]) =>
+      `@font-face { font-family: '${family}'; src: url('${url}') format('woff2'); }`,
+  )
+  .join('\n  ')
 
 type Asset = { name: string; width: number; height: number; body: string }
 
@@ -109,6 +122,23 @@ if (!(await Bun.file(CHROME).exists())) {
   process.exit(1)
 }
 
+// Checked before anything renders, because a missing font does not fail — the
+// browser quietly falls back to a generic face and hands back an asset in the
+// wrong typeface, which looks close enough to upload and is not the brand.
+for (const [label, url] of Object.entries(FONT_FILES)) {
+  if (!(await Bun.file(url).exists())) {
+    console.error(
+      `${label} is missing. Run the install first — rendering now would silently substitute a system font.`,
+    )
+    process.exit(1)
+  }
+}
+
+/** Small enough to be a failed render, whatever the exit code said. */
+const MIN_PLAUSIBLE_BYTES = 2_000
+
+let failed = 0
+
 for (const asset of ASSETS) {
   const page = `<!doctype html><meta charset="utf-8" />
 <style>*{margin:0;padding:0;box-sizing:border-box}${fonts}
@@ -121,11 +151,34 @@ ${asset.body}`
 
   await Bun.write(html, page)
 
-  await Bun.$`${CHROME} --headless --disable-gpu --hide-scrollbars --virtual-time-budget=4000 --screenshot=${png} --window-size=${asset.width},${asset.height} ${html}`.quiet()
+  try {
+    await Bun.$`${CHROME} --headless --disable-gpu --hide-scrollbars --virtual-time-budget=4000 --screenshot=${png} --window-size=${asset.width},${asset.height} ${html}`.quiet()
 
-  // The render page is scaffolding, not an asset. Leaving it behind would put
-  // a file in brand/ that looks uploadable and is not.
-  await Bun.$`rm -f ${html}`.quiet()
+    // A zero exit is not proof of a picture. Checking the size catches a render
+    // that produced nothing, which would otherwise be reported as success and
+    // uploaded as a blank image.
+    const size = Bun.file(png).size
+    if (size < MIN_PLAUSIBLE_BYTES) {
+      throw new Error(`wrote only ${size} bytes`)
+    }
 
-  console.log(`${asset.name.padEnd(16)} ${asset.width}x${asset.height}  ${png}`)
+    console.log(
+      `${asset.name.padEnd(16)} ${asset.width}x${asset.height}  ${png}`,
+    )
+  } catch (cause) {
+    // One asset failing should not abandon the rest, and should not be
+    // something you discover by noticing a stale file later.
+    failed += 1
+    console.error(`${asset.name.padEnd(16)} FAILED  ${cause}`)
+  } finally {
+    // In `finally` on purpose: the shell throws on a non-zero exit, and the
+    // previous version left this scaffolding sitting in brand/ looking like
+    // something you could upload.
+    await Bun.$`rm -f ${html}`.quiet().nothrow()
+  }
+}
+
+if (failed > 0) {
+  console.error(`\n${failed} of ${ASSETS.length} assets failed to render.`)
+  process.exit(1)
 }
