@@ -149,9 +149,11 @@ ${asset.body}`
   const html = Bun.fileURLToPath(new URL(`.render-${asset.name}.html`, OUT))
   const png = Bun.fileURLToPath(new URL(`${asset.name}.png`, OUT))
 
-  await Bun.write(html, page)
-
   try {
+    // Inside the guard, not above it: a throw from the write would otherwise
+    // go uncounted and uncleaned, and take the remaining assets with it.
+    await Bun.write(html, page)
+
     await Bun.$`${CHROME} --headless --disable-gpu --hide-scrollbars --virtual-time-budget=4000 --screenshot=${png} --window-size=${asset.width},${asset.height} ${html}`.quiet()
 
     // A zero exit is not proof of a picture. Checking the size catches a render
