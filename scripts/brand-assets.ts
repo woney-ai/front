@@ -45,14 +45,36 @@ const fonts = `
 type Asset = { name: string; width: number; height: number; body: string }
 
 const ASSETS: Asset[] = [
+  // Three avatars, because the right one depends on how the account is used
+  // and that is not a decision a script should make. All square: every
+  // platform crops to a circle, so nothing sits where a circle would clip it.
   {
-    // Square, because every platform crops it to a circle. The mark is inset
-    // generously so the circle never clips a contact row.
-    name: 'avatar',
+    // The mark. Most distinctive, and the only one that survives being small.
+    name: 'avatar-mark',
     width: 800,
     height: 800,
     body: `<div style="${engraving};width:800px;height:800px;display:flex;align-items:center;justify-content:center;">
       <div style="width:520px;height:520px;">${mark}</div>
+    </div>`,
+  },
+  {
+    // The name. Legible at profile size, illegible in a comment thread — which
+    // is where an avatar spends most of its life.
+    name: 'avatar-wordmark',
+    width: 800,
+    height: 800,
+    body: `<div style="${engraving};width:800px;height:800px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-family:'Instrument Serif',serif;font-size:190px;line-height:1;color:${BONE};letter-spacing:-0.015em;">Woney<span style="color:${FOIL};">.</span></div>
+    </div>`,
+  },
+  {
+    // The initial, set in the brand's own face, with the foil stop that is the
+    // one piece of the identity that reads at any size.
+    name: 'avatar-monogram',
+    width: 800,
+    height: 800,
+    body: `<div style="${engraving};width:800px;height:800px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-family:'Instrument Serif',serif;font-size:440px;line-height:1;color:${BONE};transform:translateY(-14px);">W<span style="color:${FOIL};">.</span></div>
     </div>`,
   },
   {
