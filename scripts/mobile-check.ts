@@ -49,70 +49,85 @@ console.log(`checking ${url}\n`)
 
 for (const name of PROFILES) {
   const device = devices[name]
-  const context = await browser.newContext({ ...device })
-  const page = await context.newPage()
 
-  await page.goto(url, { waitUntil: 'networkidle' })
-  // The card cycles through its phases; wait for one that shows every field.
-  await page.waitForTimeout(2600)
+  // Declared out here and created inside, so the release below covers a
+  // failure to create it too. The first version of this guard opened after
+  // both creations, which left two of the four operations that can throw in
+  // this loop still able to abort every remaining profile and skip every
+  // close — the exact failure the guard was added to prevent.
+  let context: Awaited<ReturnType<typeof browser.newContext>> | undefined
 
-  const probe: Probe = await page.evaluate(() => {
-    const face = document.querySelector('figure [class*="overflow-hidden"]')
-    if (!face) {
-      return {
-        clientH: 0,
-        scrollH: 0,
-        overflow: 0,
-        rowGap: null,
-        sidewaysScroll: 0,
-        error: 'card face not found',
+  try {
+    context = await browser.newContext({ ...device })
+    const page = await context.newPage()
+
+    await page.goto(url, { waitUntil: 'networkidle' })
+    // The card cycles through its phases; wait for one that shows every field.
+    await page.waitForTimeout(2600)
+
+    const probe: Probe = await page.evaluate(() => {
+      const face = document.querySelector('figure [class*="overflow-hidden"]')
+      if (!face) {
+        return {
+          clientH: 0,
+          scrollH: 0,
+          overflow: 0,
+          rowGap: null,
+          sidewaysScroll: 0,
+          error: 'card face not found',
+        }
       }
-    }
 
-    const dl = face.querySelector('dl')
-    const faceBox = face.getBoundingClientRect()
-    const dlBox = dl?.getBoundingClientRect()
-    const doc = document.documentElement
+      const dl = face.querySelector('dl')
+      const faceBox = face.getBoundingClientRect()
+      const dlBox = dl?.getBoundingClientRect()
+      const doc = document.documentElement
 
-    return {
-      clientH: Math.round(face.clientHeight),
-      scrollH: Math.round(face.scrollHeight),
-      overflow: Math.round(face.scrollHeight - face.clientHeight),
-      // Distance from the bottom data row to the card's bottom edge.
-      // Negative means the row is hanging outside and being cut.
-      rowGap: dlBox ? Math.round(faceBox.bottom - dlBox.bottom) : null,
-      sidewaysScroll: doc.scrollWidth - doc.clientWidth,
-    }
-  })
-
-  const clipped = probe.overflow > 0 || (probe.rowGap ?? 0) < 0
-  const failed = Boolean(probe.error) || clipped || probe.sidewaysScroll > 0
-  if (failed) failures += 1
-
-  const label = name.padEnd(18)
-  const size = `${device.viewport.width}x${device.viewport.height}`.padEnd(9)
-
-  console.log(
-    probe.error
-      ? `${label} ${size} ${probe.error}  FAILED`
-      : `${label} ${size} card ${probe.clientH}px, content ${probe.scrollH}px, ` +
-          `row clears bottom by ${probe.rowGap}px, sideways scroll ${probe.sidewaysScroll}px  ` +
-          (failed ? 'FAILED' : 'ok'),
-  )
-
-  await page
-    .locator('figure')
-    .first()
-    .screenshot({
-      path: Bun.fileURLToPath(
-        new URL(`${name.replace(/\s+/g, '-')}.png`, outDir),
-      ),
+      return {
+        clientH: Math.round(face.clientHeight),
+        scrollH: Math.round(face.scrollHeight),
+        overflow: Math.round(face.scrollHeight - face.clientHeight),
+        // Distance from the bottom data row to the card's bottom edge.
+        // Negative means the row is hanging outside and being cut.
+        rowGap: dlBox ? Math.round(faceBox.bottom - dlBox.bottom) : null,
+        sidewaysScroll: doc.scrollWidth - doc.clientWidth,
+      }
     })
 
-  await context.close()
+    const clipped = probe.overflow > 0 || (probe.rowGap ?? 0) < 0
+    const failed = Boolean(probe.error) || clipped || probe.sidewaysScroll > 0
+    if (failed) failures += 1
+
+    const label = name.padEnd(18)
+    const size = `${device.viewport.width}x${device.viewport.height}`.padEnd(9)
+
+    console.log(
+      probe.error
+        ? `${label} ${size} ${probe.error}  FAILED`
+        : `${label} ${size} card ${probe.clientH}px, content ${probe.scrollH}px, ` +
+            `row clears bottom by ${probe.rowGap}px, sideways scroll ${probe.sidewaysScroll}px  ` +
+            (failed ? 'FAILED' : 'ok'),
+    )
+
+    await page
+      .locator('figure')
+      .first()
+      .screenshot({
+        path: Bun.fileURLToPath(
+          new URL(`${name.replace(/\s+/g, '-')}.png`, outDir),
+        ),
+      })
+  } catch (cause) {
+    failures += 1
+    console.log(`${name.padEnd(18)} could not be checked — ${cause}`)
+  } finally {
+    await context?.close().catch(() => {})
+  }
 }
 
-await browser.close()
+// In `finally` so a throw anywhere above still releases the browser rather
+// than leaving it running after the process reports.
+await browser.close().catch(() => {})
 
 console.log(
   failures === 0
