@@ -123,7 +123,24 @@ export function SingleUseCard({ className }: { className?: string }) {
       <div className="relative" style={{ perspective: '1400px' }} aria-hidden>
         <div
           className={cn(
-            'relative aspect-[1.586] overflow-hidden rounded-[1.15rem] p-7 transition-all duration-700 ease-out',
+            // The proportion is a floor, not a cage. It used to be
+            // `aspect-[1.586]` alone, which fixes the height from the width and
+            // then clips whatever does not fit, because the face is
+            // `overflow-hidden` for the foil edge and the sheen.
+            //
+            // At 375px that left about six pixels of slack for the whole
+            // content column. It survived here and did not on iPhone, where
+            // Safari and Brave both cut the bottom row off — the amount and the
+            // use count, which are the two figures the card exists to show. Any
+            // platform whose font metrics round differently would have done the
+            // same; the layout was one pixel of bad luck from breaking
+            // anywhere.
+            //
+            // `min-h` keeps the credit-card shape when the content fits and
+            // lets the card grow a little when it does not, so nothing is ever
+            // cut. Padding and the digits also start smaller and step up at
+            // `sm`, which buys the room back on the widths where it was tight.
+            'relative min-h-[min(58vw,18.5rem)] overflow-hidden rounded-[1.15rem] p-5 transition-all duration-700 ease-out sm:aspect-[1.586] sm:min-h-0 sm:p-7',
             // The face is a background-COLOR, not a gradient, and that is both
             // the finish and a bug fix.
             //
@@ -190,7 +207,7 @@ export function SingleUseCard({ className }: { className?: string }) {
             />
           )}
 
-          <div className="relative flex h-full flex-col justify-between">
+          <div className="relative flex h-full flex-col justify-between gap-4 sm:gap-0">
             <div className="flex items-start justify-between">
               <Wordmark variant="card" />
 
@@ -221,7 +238,7 @@ export function SingleUseCard({ className }: { className?: string }) {
               <span className="rule-mono text-bone-faint">Single use</span>
               <p
                 className={cn(
-                  'mt-1.5 font-mono text-[1.32rem] tracking-[0.08em] tabular-nums transition-colors duration-500 sm:text-[1.45rem]',
+                  'mt-1.5 font-mono text-[1.08rem] tracking-[0.06em] tabular-nums transition-colors duration-500 sm:text-[1.45rem] sm:tracking-[0.08em]',
                   isDead ? 'text-bone-faint line-through' : 'text-bone',
                 )}
               >
@@ -229,7 +246,7 @@ export function SingleUseCard({ className }: { className?: string }) {
               </p>
             </div>
 
-            <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-4">
+            <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-3 sm:gap-4">
               {[
                 // The merchant is real captured data: `intended_merchant` is
                 // stored on the card row and sent to the provider, and binding

@@ -259,7 +259,13 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
         <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <User className="size-3.5 text-bone-dim" aria-hidden />
         </MessageAvatar>
-        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+        {/* No width cap on phones. 85% on a 320px screen threw away forty
+            pixels on the far side of an already narrow column, which read as
+            the whole transcript shunted left — measured in WebKit, which is
+            where it was reported. A cap earns its keep on a wide screen, where
+            an unbroken line would run too long to track; below sm there is no
+            such line to prevent. */}
+        <MessageContent className="sm:max-w-[70%]">
           {/* w-fit and self-end because MessageContent is full width and its
               own end-alignment rule only reaches children carrying a
               data-slot. Without these the bubble stretches to the cap instead
@@ -285,7 +291,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
           <MessageAvatar className="size-7 self-start border border-foil/30 bg-foil/10">
             <Wordmark variant="monogram" />
           </MessageAvatar>
-          <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+          <MessageContent className="sm:max-w-[70%]">
             <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-dim">
               {entry.text}
             </p>
@@ -305,7 +311,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
         <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
         </MessageAvatar>
-        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+        <MessageContent className="sm:max-w-[70%]">
           <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-faint italic">
             {entry.text}
           </p>
