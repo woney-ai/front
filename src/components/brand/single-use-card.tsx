@@ -241,7 +241,7 @@ export function SingleUseCard({ className }: { className?: string }) {
                 // — the backend is still being built — so the same rule would
                 // forbid every sentence on the page. See the header comment for
                 // the line that survives: intent, not shipping date.
-                { term: 'Merchant', value: 'northwind.shop' },
+                { term: 'Store', value: 'northwind.shop' },
                 { term: 'Amount', value: '$142.60' },
                 { term: 'Uses', value: isDead ? '1 / 1' : '0 / 1' },
               ].map(({ term, value }) => (
@@ -269,7 +269,7 @@ export function SingleUseCard({ className }: { className?: string }) {
 
       <figcaption className="mt-6 flex items-center gap-2.5 text-[0.8125rem] text-bone-faint">
         <span className="h-px flex-1 bg-line" />
-        One card, one merchant, one amount, one use.
+        One card, one store, one amount, one use.
         <span className="h-px flex-1 bg-line" />
       </figcaption>
     </figure>
