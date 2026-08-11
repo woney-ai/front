@@ -140,7 +140,7 @@ export function SingleUseCard({ className }: { className?: string }) {
             // lets the card grow a little when it does not, so nothing is ever
             // cut. Padding and the digits also start smaller and step up at
             // `sm`, which buys the room back on the widths where it was tight.
-            'relative min-h-[min(58vw,18.5rem)] overflow-hidden rounded-[1.15rem] p-5 transition-all duration-700 ease-out sm:aspect-[1.586] sm:min-h-0 sm:p-7',
+            'relative flex min-h-[min(58vw,18.5rem)] overflow-hidden rounded-[1.15rem] p-5 transition-all duration-700 ease-out sm:aspect-[1.586] sm:min-h-0 sm:p-7',
             // The face is a background-COLOR, not a gradient, and that is both
             // the finish and a bug fix.
             //
@@ -207,7 +207,15 @@ export function SingleUseCard({ className }: { className?: string }) {
             />
           )}
 
-          <div className="relative flex h-full flex-col justify-between gap-4 sm:gap-0">
+          {/* `flex-1`, not `h-full`. A percentage height only resolves against a
+              definite one: with the proportion it had one, and switching the
+              small screens to `min-height` made it automatic — so `h-full`
+              became `auto`, the column stopped stretching, and
+              `justify-between` had nothing to distribute. The bottom row rose
+              to meet the middle and left dead space under it. Fixing the
+              clipping introduced that; this makes the column fill whatever
+              height the face ended up with, either way. */}
+          <div className="relative flex flex-1 flex-col justify-between">
             <div className="flex items-start justify-between">
               <Wordmark variant="card" />
 
