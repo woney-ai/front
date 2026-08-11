@@ -232,13 +232,15 @@ export function SingleUseCard({ className }: { className?: string }) {
             <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-4">
               {[
                 // The merchant is real captured data: `intended_merchant` is
-                // stored on the card row and sent to the provider. Showing it
-                // is honest and it is where the product is heading — binding
-                // the card to that merchant is on the MVP path.
+                // stored on the card row and sent to the provider, and binding
+                // the card to it is on the MVP build path.
                 //
-                // What it is not yet is an enforced restriction. Keep it as a
-                // field on the card; do not write prose that says the card is
-                // locked to it until the enforcement ships.
+                // This note used to forbid prose saying the card is locked to
+                // that merchant "until the enforcement ships", which made sense
+                // when parts of the product were assumed to be live. Nothing is
+                // — the backend is still being built — so the same rule would
+                // forbid every sentence on the page. See the header comment for
+                // the line that survives: intent, not shipping date.
                 { term: 'Merchant', value: 'northwind.shop' },
                 { term: 'Amount', value: '$142.60' },
                 { term: 'Uses', value: isDead ? '1 / 1' : '0 / 1' },
