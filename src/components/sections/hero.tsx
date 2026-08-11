@@ -45,12 +45,27 @@ export function Hero() {
               // straight to 18px left the eye with nowhere to land; 21px is the
               // missing step, and it is the only paragraph on the page that
               // gets it.
+              //
+              // It opens on the moment rather than on us. The headline states a
+              // problem, and this used to answer with "Woney closes that gap",
+              // which spent the most valuable position on the page repeating
+              // the sentence above it — and only landed for a reader who
+              // already delegates purchases and has felt the stop. Almost
+              // nobody has yet. Showing the stop happening is what lets the
+              // headline mean something to everyone else.
+              //
+              // It also ends on a fact instead of "it handles the rest". In a
+              // product that touches money, "the rest" is precisely what the
+              // reader needs said out loud.
               className="animate-rise mt-7 max-w-xl text-[1.3125rem] leading-[1.6] text-pretty text-bone-dim"
               style={{ animationDelay: '0.16s' }}
             >
-              Woney closes that gap. Your agent gets a{' '}
-              <span className="text-bone">real way to pay</span>. You decide
-              what it can spend. It handles the rest.
+              Your agent finds it, compares sellers, picks one — and then{' '}
+              <span className="text-bone">
+                stops, because paying means your card
+              </span>
+              . Woney gives it a card of its own: yours never moves, and it can
+              only spend what you allowed.
             </p>
 
             <div

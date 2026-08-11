@@ -122,12 +122,23 @@ export function AgentSession() {
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <SectionHeading
           index="In the agent"
-          title="The card, not the checkout."
+          title="One purchase goes through. One does not."
         >
-          {/* The two sections above already argued the case. This one only has
-              to show it, so the lead points at the transcript instead of
-              restating what the reader just read. */}
-          Here is what that looks like inside a chat with your agent.
+          {/* This was "The card, not the checkout." — an internal correction
+              (we are not an MCP server, we do not run the checkout) promoted
+              to a headline. It answers a question the reader has not asked
+              yet, and can only be understood after learning what we do NOT
+              do.
+
+              It also buried the best thing in the section. The transcript is
+              the only place on the page where the product says no, and the
+              title now promises exactly that: two attempts, not one, so the
+              refusal reads as the design working rather than as a failure.
+
+              What the old title carried is not lost — the store row inside the
+              transcript and "Nothing changes on the store's side" in step two
+              both make the point where it belongs. */}
+          Here is the whole thing, from inside a chat with your agent.
         </SectionHeading>
 
         <div
