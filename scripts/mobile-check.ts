@@ -30,6 +30,13 @@ import { webkit, devices } from 'playwright'
 const url = Bun.argv[2] ?? 'http://localhost:8899/'
 const outDir = new URL('../.mobile-check/', import.meta.url)
 
+/**
+ * How far the bottom row may sit above the card's inner edge before it reads
+ * as a hole rather than as padding. The card pads 20px at these widths, so
+ * anything much beyond that is space the layout did not intend.
+ */
+const MAX_BOTTOM_SLACK = 28
+
 /** Smallest phone still in use, the common size, and the largest. */
 const PROFILES = ['iPhone SE', 'iPhone 12', 'iPhone 14 Pro Max'] as const
 
@@ -94,8 +101,15 @@ for (const name of PROFILES) {
       }
     })
 
+    // Both directions. Negative is the row hanging outside and being cut;
+    // a large positive is dead space under it, which is what happened when
+    // the clipping fix made the content column stop stretching. This check
+    // measured that gap and passed it, because it only ever asked whether
+    // the number was negative.
     const clipped = probe.overflow > 0 || (probe.rowGap ?? 0) < 0
-    const failed = Boolean(probe.error) || clipped || probe.sidewaysScroll > 0
+    const slack = (probe.rowGap ?? 0) > MAX_BOTTOM_SLACK
+    const failed =
+      Boolean(probe.error) || clipped || slack || probe.sidewaysScroll > 0
     if (failed) failures += 1
 
     const label = name.padEnd(18)
@@ -105,7 +119,7 @@ for (const name of PROFILES) {
       probe.error
         ? `${label} ${size} ${probe.error}  FAILED`
         : `${label} ${size} card ${probe.clientH}px, content ${probe.scrollH}px, ` +
-            `row clears bottom by ${probe.rowGap}px, sideways scroll ${probe.sidewaysScroll}px  ` +
+            `bottom gap ${probe.rowGap}px, sideways scroll ${probe.sidewaysScroll}px  ` +
             (failed ? 'FAILED' : 'ok'),
     )
 
