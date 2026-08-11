@@ -69,7 +69,12 @@ export function Capabilities() {
               key={title}
               className="group relative bg-ink p-7 transition-colors duration-300 hover:bg-surface"
             >
-              <span className="rule-mono text-bone-faint tabular-nums">
+              {/* Ornamental. It reads as a stray "04" in extracted text, and
+                  the grid already communicates order visually. */}
+              <span
+                aria-hidden
+                className="rule-mono text-bone-faint tabular-nums"
+              >
                 {String(index + 1).padStart(2, '0')}
               </span>
               <h3 className="mt-3.5 text-[1.0625rem] font-semibold tracking-[-0.01em] text-bone">

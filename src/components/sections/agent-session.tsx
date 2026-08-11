@@ -189,7 +189,7 @@ function SessionBar() {
     <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line bg-white/[0.02] px-5 py-3">
       <span className="rule-mono text-bone-faint">Agent session</span>
       <span className="rule-mono text-bone-faint tabular-nums">
-        Daily limit ${DAILY_LIMIT}
+        Daily limit {`$${DAILY_LIMIT}`}
       </span>
     </div>
   )

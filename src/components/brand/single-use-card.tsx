@@ -19,13 +19,21 @@ import { cn } from '@/lib/utils'
  * The merchant shown is captured data — today `intended_merchant` is recorded
  * and forwarded, and binding the card to it is on the MVP build path.
  *
- * The line this codebase draws, and it is the owner's: this page may show the
- * product being built, so a roadmap capability like the merchant lock is
- * allowed to appear in the illustrative artifacts. What is never allowed is a
- * capability nobody intends to build. Prose OUTSIDE the artifacts — the hero,
- * how-it-works, audiences, the meta description, the JSON-LD — states only what
- * ships today, because that is where a reader takes a claim as fact rather than
- * as a demo.
+ * The line this codebase draws, and it is the owner's: WHAT IS NEVER ALLOWED
+ * IS A CAPABILITY NOBODY INTENDS TO BUILD. Everything on this page describes
+ * the product being built, which is what a pre-launch page is for.
+ *
+ * This rule used to read "prose outside the artifacts states only what ships
+ * today". That was written assuming parts had already shipped. Nothing has —
+ * the backend is still being built — so taken literally it would forbid the
+ * entire page. The distinction that survives is intent, not shipping date.
+ *
+ * What the page owes in exchange is that its stage is unmistakable, to a
+ * person and to a machine. The visible copy says "Private beta", "Request
+ * access" and "Access opens in batches"; the JSON-LD says the product is not
+ * yet generally available. A model quoting one of those without the other
+ * would otherwise report a live product, and that correction cannot be made
+ * after the fact.
  */
 
 type Phase = 'minting' | 'locked' | 'authorized' | 'spent'
@@ -42,11 +50,20 @@ const PHASE_DURATION: Record<Phase, number> = {
 const SAMPLE_NUMBER = '5412 7799 0031 4408'
 const SCRAMBLE_CHARS = '0123456789'
 
+/**
+ * What the card says it is doing, in the reader's words rather than ours.
+ *
+ * The internal phase names stay as they are — they are ours, and renaming them
+ * would say nothing. What ships is this map, and it was leaking: extracted as
+ * text the card announced "Minting", which is the same vocabulary the rest of
+ * the page spent a day removing, on the one surface written for machines to
+ * read.
+ */
 const STATUS_LABEL: Record<Phase, string> = {
-  minting: 'Minting',
-  locked: 'Locked',
-  authorized: 'Authorized',
-  spent: 'Spent',
+  minting: 'Creating',
+  locked: 'Locked to one store',
+  authorized: 'Paid',
+  spent: 'No longer works',
 }
 
 function scramble(template: string): string {

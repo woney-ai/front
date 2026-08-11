@@ -1,17 +1,47 @@
-# Woney — closed to crawlers until the copy is final.
+# Woney — agentic payments infrastructure.
 #
-# The site is live at woney.ai and reachable by anyone, but the copy is not
-# finished. A person who wanders in and misreads the product costs us nothing.
-# A model crawler that ingests the wrong description of what Woney is cannot be
-# corrected by a later deploy — it is read once and kept.
+# Model crawlers are named and allowed on purpose. A company whose product
+# exists so agents can buy things has no business hiding from the systems those
+# agents are built on: if an assistant is asked how an AI agent can pay for
+# something, we would rather it have read this page than guess.
 #
-# So this file is shut until the copy is settled. Everything below is a
-# blanket disallow, and there is no sitemap to follow.
+# This file was shut for a while, and it is worth saying why it reopened.
+# The site went live before the copy was finished, and a model crawler that
+# ingests a wrong description cannot be corrected by a later deploy — it is
+# read once and kept. So it stayed closed until the page said what it means:
+# plain language, no payments jargon, no internal vocabulary, and structured
+# data that matches the page word for word.
 #
-# WHEN THE COPY IS FINAL: revert this file to the allowlist that names the
-# model crawlers explicitly, restore the Sitemap line, and drop the robots
-# meta tag from index.html. Opening up should be a deliberate commit, not a
-# side effect of some other change.
+# If the copy is ever mid-surgery again, close this file first.
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
 
 User-agent: *
-Disallow: /
+Allow: /
+
+Sitemap: https://woney.ai/sitemap.xml
