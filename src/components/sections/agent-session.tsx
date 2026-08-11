@@ -25,14 +25,17 @@ import { SectionHeading } from './section-heading'
  * landing page as documentation. A name and a result say a tool ran and what
  * came back, which is the whole point, and stop there.
  *
- * Two claims this must never make, because neither is true:
+ * ONE CLAIM THIS MUST NEVER MAKE, because it is not true and is not being
+ * built: Woney does not check out. The store's checkout is the same page every
+ * shopper gets, and the agent works through it exactly as a person would.
+ * Hence the `store` entry — that step is the one we do not do.
  *
- *   Woney is not an MCP server. It is payment infrastructure. How the agent
- *   reaches it is the agent's business.
- *
- *   Woney does not check out. The merchant's checkout is the same page every
- *   shopper gets, and the agent works through it exactly as a person would.
- *   Hence the `store` entry: that step is the one we do not do.
+ * There used to be a second, "Woney is not an MCP server", and it is gone
+ * because it is no longer true. That line was written when the page claimed to
+ * be an MCP AND to run the checkout; the checkout was the falsehood, but the
+ * correction was written absolutely and outlived its reason. An MCP server and
+ * a CLI are on the build path — they are surfaces onto the product, not the
+ * product, which is payment infrastructure either way.
  *
  * The transcript ends on a refusal on purpose — autonomy inside the limit, a
  * stop outside it, and a way to say yes.
@@ -122,12 +125,22 @@ export function AgentSession() {
       <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
         <SectionHeading
           index="In the agent"
-          title="The card, not the checkout."
+          title="One purchase goes through. One does not."
         >
-          {/* The two sections above already argued the case. This one only has
-              to show it, so the lead points at the transcript instead of
-              restating what the reader just read. */}
-          Here is what that looks like inside a chat with your agent.
+          {/* This was "The card, not the checkout." — an internal correction
+              (we do not run the checkout) promoted to a headline. It answers a
+              question the reader has not asked yet, and can only be understood
+              after learning what we do NOT do.
+
+              It also buried the best thing in the section. The transcript is
+              the only place on the page where the product says no, and the
+              title now promises exactly that: two attempts, not one, so the
+              refusal reads as the design working rather than as a failure.
+
+              What the old title carried is not lost — the store row inside the
+              transcript and "Nothing changes on the store's side" in step two
+              both make the point where it belongs. */}
+          Here is the whole thing, from inside a chat with your agent.
         </SectionHeading>
 
         <div
@@ -189,7 +202,7 @@ function SessionBar() {
     <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 border-b border-line bg-white/[0.02] px-5 py-3">
       <span className="rule-mono text-bone-faint">Agent session</span>
       <span className="rule-mono text-bone-faint tabular-nums">
-        Daily limit ${DAILY_LIMIT}
+        Daily limit {`$${DAILY_LIMIT}`}
       </span>
     </div>
   )
@@ -246,7 +259,13 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
         <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <User className="size-3.5 text-bone-dim" aria-hidden />
         </MessageAvatar>
-        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+        {/* No width cap on phones. 85% on a 320px screen threw away forty
+            pixels on the far side of an already narrow column, which read as
+            the whole transcript shunted left — measured in WebKit, which is
+            where it was reported. A cap earns its keep on a wide screen, where
+            an unbroken line would run too long to track; below sm there is no
+            such line to prevent. */}
+        <MessageContent className="sm:max-w-[70%]">
           {/* w-fit and self-end because MessageContent is full width and its
               own end-alignment rule only reaches children carrying a
               data-slot. Without these the bubble stretches to the cap instead
@@ -272,7 +291,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
           <MessageAvatar className="size-7 self-start border border-foil/30 bg-foil/10">
             <Wordmark variant="monogram" />
           </MessageAvatar>
-          <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+          <MessageContent className="sm:max-w-[70%]">
             <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-dim">
               {entry.text}
             </p>
@@ -292,7 +311,7 @@ function TranscriptEntry({ entry }: { entry: Entry }) {
         <MessageAvatar className="size-7 self-start border border-line bg-white/[0.04]">
           <ShoppingCart className="size-3.5 text-bone-faint" aria-hidden />
         </MessageAvatar>
-        <MessageContent className="max-w-[85%] sm:max-w-[70%]">
+        <MessageContent className="sm:max-w-[70%]">
           <p className="pt-1 text-[0.9375rem] leading-relaxed text-bone-faint italic">
             {entry.text}
           </p>

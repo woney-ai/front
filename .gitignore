@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 .email-preview
+.mobile-check
 *.local
 
 # Vendored agent skills — reproducible from skills-lock.json

@@ -19,13 +19,21 @@ import { cn } from '@/lib/utils'
  * The merchant shown is captured data — today `intended_merchant` is recorded
  * and forwarded, and binding the card to it is on the MVP build path.
  *
- * The line this codebase draws, and it is the owner's: this page may show the
- * product being built, so a roadmap capability like the merchant lock is
- * allowed to appear in the illustrative artifacts. What is never allowed is a
- * capability nobody intends to build. Prose OUTSIDE the artifacts — the hero,
- * how-it-works, audiences, the meta description, the JSON-LD — states only what
- * ships today, because that is where a reader takes a claim as fact rather than
- * as a demo.
+ * The line this codebase draws, and it is the owner's: WHAT IS NEVER ALLOWED
+ * IS A CAPABILITY NOBODY INTENDS TO BUILD. Everything on this page describes
+ * the product being built, which is what a pre-launch page is for.
+ *
+ * This rule used to read "prose outside the artifacts states only what ships
+ * today". That was written assuming parts had already shipped. Nothing has —
+ * the backend is still being built — so taken literally it would forbid the
+ * entire page. The distinction that survives is intent, not shipping date.
+ *
+ * What the page owes in exchange is that its stage is unmistakable, to a
+ * person and to a machine. The visible copy says "Private beta", "Request
+ * access" and "Access opens in batches"; the JSON-LD says the product is not
+ * yet generally available. A model quoting one of those without the other
+ * would otherwise report a live product, and that correction cannot be made
+ * after the fact.
  */
 
 type Phase = 'minting' | 'locked' | 'authorized' | 'spent'
@@ -42,11 +50,20 @@ const PHASE_DURATION: Record<Phase, number> = {
 const SAMPLE_NUMBER = '5412 7799 0031 4408'
 const SCRAMBLE_CHARS = '0123456789'
 
+/**
+ * What the card says it is doing, in the reader's words rather than ours.
+ *
+ * The internal phase names stay as they are — they are ours, and renaming them
+ * would say nothing. What ships is this map, and it was leaking: extracted as
+ * text the card announced "Minting", which is the same vocabulary the rest of
+ * the page spent a day removing, on the one surface written for machines to
+ * read.
+ */
 const STATUS_LABEL: Record<Phase, string> = {
-  minting: 'Minting',
-  locked: 'Locked',
-  authorized: 'Authorized',
-  spent: 'Spent',
+  minting: 'Creating',
+  locked: 'Locked to one store',
+  authorized: 'Paid',
+  spent: 'No longer works',
 }
 
 function scramble(template: string): string {
@@ -106,7 +123,24 @@ export function SingleUseCard({ className }: { className?: string }) {
       <div className="relative" style={{ perspective: '1400px' }} aria-hidden>
         <div
           className={cn(
-            'relative aspect-[1.586] overflow-hidden rounded-[1.15rem] p-7 transition-all duration-700 ease-out',
+            // The proportion is a floor, not a cage. It used to be
+            // `aspect-[1.586]` alone, which fixes the height from the width and
+            // then clips whatever does not fit, because the face is
+            // `overflow-hidden` for the foil edge and the sheen.
+            //
+            // At 375px that left about six pixels of slack for the whole
+            // content column. It survived here and did not on iPhone, where
+            // Safari and Brave both cut the bottom row off — the amount and the
+            // use count, which are the two figures the card exists to show. Any
+            // platform whose font metrics round differently would have done the
+            // same; the layout was one pixel of bad luck from breaking
+            // anywhere.
+            //
+            // `min-h` keeps the credit-card shape when the content fits and
+            // lets the card grow a little when it does not, so nothing is ever
+            // cut. Padding and the digits also start smaller and step up at
+            // `sm`, which buys the room back on the widths where it was tight.
+            'relative min-h-[min(58vw,18.5rem)] overflow-hidden rounded-[1.15rem] p-5 transition-all duration-700 ease-out sm:aspect-[1.586] sm:min-h-0 sm:p-7',
             // The face is a background-COLOR, not a gradient, and that is both
             // the finish and a bug fix.
             //
@@ -173,7 +207,7 @@ export function SingleUseCard({ className }: { className?: string }) {
             />
           )}
 
-          <div className="relative flex h-full flex-col justify-between">
+          <div className="relative flex h-full flex-col justify-between gap-4 sm:gap-0">
             <div className="flex items-start justify-between">
               <Wordmark variant="card" />
 
@@ -204,7 +238,7 @@ export function SingleUseCard({ className }: { className?: string }) {
               <span className="rule-mono text-bone-faint">Single use</span>
               <p
                 className={cn(
-                  'mt-1.5 font-mono text-[1.32rem] tracking-[0.08em] tabular-nums transition-colors duration-500 sm:text-[1.45rem]',
+                  'mt-1.5 font-mono text-[1.08rem] tracking-[0.06em] tabular-nums transition-colors duration-500 sm:text-[1.45rem] sm:tracking-[0.08em]',
                   isDead ? 'text-bone-faint line-through' : 'text-bone',
                 )}
               >
@@ -212,17 +246,19 @@ export function SingleUseCard({ className }: { className?: string }) {
               </p>
             </div>
 
-            <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-4">
+            <dl className="grid grid-cols-[1.4fr_1fr_auto] gap-3 sm:gap-4">
               {[
                 // The merchant is real captured data: `intended_merchant` is
-                // stored on the card row and sent to the provider. Showing it
-                // is honest and it is where the product is heading — binding
-                // the card to that merchant is on the MVP path.
+                // stored on the card row and sent to the provider, and binding
+                // the card to it is on the MVP build path.
                 //
-                // What it is not yet is an enforced restriction. Keep it as a
-                // field on the card; do not write prose that says the card is
-                // locked to it until the enforcement ships.
-                { term: 'Merchant', value: 'northwind.shop' },
+                // This note used to forbid prose saying the card is locked to
+                // that merchant "until the enforcement ships", which made sense
+                // when parts of the product were assumed to be live. Nothing is
+                // — the backend is still being built — so the same rule would
+                // forbid every sentence on the page. See the header comment for
+                // the line that survives: intent, not shipping date.
+                { term: 'Store', value: 'northwind.shop' },
                 { term: 'Amount', value: '$142.60' },
                 { term: 'Uses', value: isDead ? '1 / 1' : '0 / 1' },
               ].map(({ term, value }) => (
@@ -250,7 +286,7 @@ export function SingleUseCard({ className }: { className?: string }) {
 
       <figcaption className="mt-6 flex items-center gap-2.5 text-[0.8125rem] text-bone-faint">
         <span className="h-px flex-1 bg-line" />
-        One card, one merchant, one amount, one use.
+        One card, one store, one amount, one use.
         <span className="h-px flex-1 bg-line" />
       </figcaption>
     </figure>

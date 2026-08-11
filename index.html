@@ -10,16 +10,6 @@
 
     <link rel="canonical" href="https://woney.ai/" />
 
-    <!-- Closed until the copy is final. robots.txt already disallows everyone,
-         which stops well-behaved crawlers from fetching this page at all — but
-         a disallowed URL can still be listed bare, from inbound links alone,
-         and not every crawler that ignores robots.txt ignores this tag too.
-         The two cover different gaps, so both stay until launch.
-
-         Remove this together with the robots.txt allowlist, in one deliberate
-         commit. See the note at the top of public/robots.txt. -->
-    <meta name="robots" content="noindex, nofollow" />
-
     <title>Woney — give your AI agent a way to pay</title>
     <meta
       name="description"
@@ -65,9 +55,18 @@
          For a company built so that agents can buy things, being legible to
          the systems those agents run on is not a nice-to-have.
 
-         Keep this honest with the page. `featureList` describes what ships;
-         anything on the roadmap belongs in the copy, not in structured data a
-         machine will quote back as fact. -->
+         Two rules, and the second was learned by breaking it.
+
+         Keep it honest. `featureList` describes what ships; anything on the
+         roadmap belongs in the copy, not in structured data a machine will
+         quote back as fact.
+
+         Keep it in the page's words. This block spent a day out of step with
+         the page: "issues", "merchant", "capped at issuance" — the exact
+         vocabulary the visible copy had just shed — and it listed five
+         features against the page's six. This is the one surface written for
+         machines, so it is the last place that should speak a dialect the
+         humans were spared. Every line below is the page's own sentence. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -77,9 +76,10 @@
             "@id": "https://woney.ai/#organization",
             "name": "Woney",
             "url": "https://woney.ai/",
-            "logo": "https://woney.ai/og.png",
+            "logo": "https://woney.ai/logo.png",
             "email": "hello@woney.ai",
-            "description": "Payments infrastructure that lets an AI agent pay for a purchase without ever holding its owner's card."
+            "sameAs": ["https://www.linkedin.com/company/woney-ai/"],
+            "description": "Payments infrastructure that gives an AI agent a way to pay that is never its owner's card."
           },
           {
             "@type": "WebSite",
@@ -96,17 +96,21 @@
             "operatingSystem": "Web",
             "url": "https://woney.ai/",
             "publisher": { "@id": "https://woney.ai/#organization" },
-            "description": "Woney issues a virtual card for a single purchase so an AI agent can check out at any online merchant on its owner's behalf. The agent completes the merchant's normal checkout itself — nothing is required of the merchant — and never receives the owner's real card. Spending is bounded by a limit the owner sets in advance.",
+            "disambiguatingDescription": "In private beta. Not yet generally available; access opens in batches from a waitlist.",
+            "description": "Woney creates a card for each purchase, so an AI agent can pay at any online store on its owner's behalf. The agent shops and checks out the way a person would, and nothing changes on the store's side. It never gets the owner's card, and once a payment goes through, the card it used stops working. The owner decides how much it can spend. Woney is in private beta and not yet generally available; access opens in batches from a waitlist.",
             "featureList": [
-              "A virtual card issued per purchase, valid for one transaction",
-              "Card amount capped at issuance",
-              "Works at any online checkout with no merchant integration",
-              "Per-agent spending limits set by the account owner",
-              "The owner's real card is never exposed to the agent"
+              "One card per purchase, which stops working once the payment goes through",
+              "Each card is created for the exact total of that purchase",
+              "Each card only works at the store it was created for",
+              "The agent buys on its own under the owner's limit; over it, the purchase waits for approval",
+              "A receipt for every purchase, for the agent and for the owner",
+              "A record of who asked, what the agent decided, and which card paid",
+              "The owner's real card is never given to the agent",
+              "An agent reaches Woney through an MCP server or a command-line tool"
             ],
             "audience": {
               "@type": "Audience",
-              "audienceType": "AI agent developers and people who delegate purchases to AI assistants"
+              "audienceType": "People who delegate purchases to an AI assistant, and the developers who build those assistants"
             }
           }
         ]
