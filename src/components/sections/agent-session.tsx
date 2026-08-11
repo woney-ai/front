@@ -25,14 +25,17 @@ import { SectionHeading } from './section-heading'
  * landing page as documentation. A name and a result say a tool ran and what
  * came back, which is the whole point, and stop there.
  *
- * Two claims this must never make, because neither is true:
+ * ONE CLAIM THIS MUST NEVER MAKE, because it is not true and is not being
+ * built: Woney does not check out. The store's checkout is the same page every
+ * shopper gets, and the agent works through it exactly as a person would.
+ * Hence the `store` entry — that step is the one we do not do.
  *
- *   Woney is not an MCP server. It is payment infrastructure. How the agent
- *   reaches it is the agent's business.
- *
- *   Woney does not check out. The merchant's checkout is the same page every
- *   shopper gets, and the agent works through it exactly as a person would.
- *   Hence the `store` entry: that step is the one we do not do.
+ * There used to be a second, "Woney is not an MCP server", and it is gone
+ * because it is no longer true. That line was written when the page claimed to
+ * be an MCP AND to run the checkout; the checkout was the falsehood, but the
+ * correction was written absolutely and outlived its reason. An MCP server and
+ * a CLI are on the build path — they are surfaces onto the product, not the
+ * product, which is payment infrastructure either way.
  *
  * The transcript ends on a refusal on purpose — autonomy inside the limit, a
  * stop outside it, and a way to say yes.
@@ -125,10 +128,9 @@ export function AgentSession() {
           title="One purchase goes through. One does not."
         >
           {/* This was "The card, not the checkout." — an internal correction
-              (we are not an MCP server, we do not run the checkout) promoted
-              to a headline. It answers a question the reader has not asked
-              yet, and can only be understood after learning what we do NOT
-              do.
+              (we do not run the checkout) promoted to a headline. It answers a
+              question the reader has not asked yet, and can only be understood
+              after learning what we do NOT do.
 
               It also buried the best thing in the section. The transcript is
               the only place on the page where the product says no, and the

@@ -83,9 +83,20 @@ export function Hero() {
               style={{ animationDelay: '0.32s' }}
             >
               {[
+                // Three product facts, scanned rather than read. This row used
+                // to end on "Access · Rolling batches", which is waitlist
+                // logistics sitting in a line otherwise about what the thing
+                // does — and the form directly above already says access opens
+                // in batches.
+                //
+                // What replaces it is the one fact a developer comes looking
+                // for and could not find anywhere on the page. It belongs here
+                // and not in the prose: "MCP" means nothing to the reader who
+                // just delegates purchases, and everything to the one deciding
+                // whether to build against us.
                 { term: 'Merchant integration', value: 'None required' },
                 { term: 'Card reuse', value: 'Impossible by design' },
-                { term: 'Access', value: 'Rolling batches' },
+                { term: 'Agent access', value: 'MCP and CLI' },
               ].map(({ term, value }) => (
                 <div key={term}>
                   <dt className="rule-mono text-bone-faint">{term}</dt>
