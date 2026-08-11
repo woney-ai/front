@@ -31,11 +31,12 @@ const url = Bun.argv[2] ?? 'http://localhost:8899/'
 const outDir = new URL('../.mobile-check/', import.meta.url)
 
 /**
- * How far the bottom row may sit above the card's inner edge before it reads
- * as a hole rather than as padding. The card pads 20px at these widths, so
- * anything much beyond that is space the layout did not intend.
+ * Slack allowed beyond the card's own bottom padding before the space reads as
+ * a hole rather than as breathing room. The padding is read from the rendered
+ * card rather than copied here: a threshold that restates a value defined
+ * somewhere else stops being true the moment that value changes.
  */
-const MAX_BOTTOM_SLACK = 28
+const SLACK_TOLERANCE = 8
 
 /** Smallest phone still in use, the common size, and the largest. */
 const PROFILES = ['iPhone SE', 'iPhone 12', 'iPhone 14 Pro Max'] as const
@@ -45,6 +46,7 @@ type Probe = {
   scrollH: number
   overflow: number
   rowGap: number | null
+  padBottom: number
   sidewaysScroll: number
   error?: string
 }
@@ -80,14 +82,27 @@ for (const name of PROFILES) {
           scrollH: 0,
           overflow: 0,
           rowGap: null,
+          padBottom: 0,
           sidewaysScroll: 0,
           error: 'card face not found',
         }
       }
 
       const dl = face.querySelector('dl')
+      if (!dl) {
+        return {
+          clientH: 0,
+          scrollH: 0,
+          overflow: 0,
+          rowGap: null,
+          padBottom: 0,
+          sidewaysScroll: 0,
+          error: 'bottom data row not found',
+        }
+      }
+
       const faceBox = face.getBoundingClientRect()
-      const dlBox = dl?.getBoundingClientRect()
+      const dlBox = dl.getBoundingClientRect()
       const doc = document.documentElement
 
       return {
@@ -96,20 +111,32 @@ for (const name of PROFILES) {
         overflow: Math.round(face.scrollHeight - face.clientHeight),
         // Distance from the bottom data row to the card's bottom edge.
         // Negative means the row is hanging outside and being cut.
-        rowGap: dlBox ? Math.round(faceBox.bottom - dlBox.bottom) : null,
+        rowGap: Math.round(faceBox.bottom - dlBox.bottom),
+        padBottom: Math.round(
+          parseFloat(getComputedStyle(face).paddingBottom) || 0,
+        ),
         sidewaysScroll: doc.scrollWidth - doc.clientWidth,
       }
     })
 
-    // Both directions. Negative is the row hanging outside and being cut;
-    // a large positive is dead space under it, which is what happened when
-    // the clipping fix made the content column stop stretching. This check
-    // measured that gap and passed it, because it only ever asked whether
-    // the number was negative.
-    const clipped = probe.overflow > 0 || (probe.rowGap ?? 0) < 0
-    const slack = (probe.rowGap ?? 0) > MAX_BOTTOM_SLACK
+    // Both directions, and a missing measurement is neither. Negative is the
+    // row hanging outside and being cut; a large positive is dead space under
+    // it, which is what happened when the clipping fix stopped the content
+    // column stretching — this check measured that gap and passed it, because
+    // it only asked whether the number was negative.
+    //
+    // A null gap used to coalesce to zero, which read as a perfect layout.
+    // That is the one failure this tool cannot have: reporting success on a
+    // card it could not measure. It is an error now, not a zero.
+    const measured = probe.rowGap !== null
+    const clipped = probe.overflow > 0 || (measured && probe.rowGap! < 0)
+    const slack = measured && probe.rowGap! > probe.padBottom + SLACK_TOLERANCE
     const failed =
-      Boolean(probe.error) || clipped || slack || probe.sidewaysScroll > 0
+      Boolean(probe.error) ||
+      !measured ||
+      clipped ||
+      slack ||
+      probe.sidewaysScroll > 0
     if (failed) failures += 1
 
     const label = name.padEnd(18)
@@ -119,7 +146,8 @@ for (const name of PROFILES) {
       probe.error
         ? `${label} ${size} ${probe.error}  FAILED`
         : `${label} ${size} card ${probe.clientH}px, content ${probe.scrollH}px, ` +
-            `bottom gap ${probe.rowGap}px, sideways scroll ${probe.sidewaysScroll}px  ` +
+            `bottom gap ${probe.rowGap}px of ${probe.padBottom}px padding, ` +
+            `sideways scroll ${probe.sidewaysScroll}px  ` +
             (failed ? 'FAILED' : 'ok'),
     )
 
