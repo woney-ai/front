@@ -1,5 +1,6 @@
 import { Analytics } from '@vercel/analytics/react'
 
+import { ErrorBoundary } from '@/components/error-boundary'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteHeader } from '@/components/layout/site-header'
 import { AgentSession } from '@/components/sections/agent-session'
@@ -18,14 +19,19 @@ export function App() {
         Skip to content
       </a>
 
+      {/* Wrapping the sections rather than the whole tree: the header and the
+          footer carry the only two ways to reach us, so a section that throws
+          should not take the address with it. */}
       <SiteHeader />
-      <main id="main">
-        <Hero />
-        <HowItWorks />
-        <AgentSession />
-        <Capabilities />
-        <ClosingCta />
-      </main>
+      <ErrorBoundary>
+        <main id="main">
+          <Hero />
+          <HowItWorks />
+          <AgentSession />
+          <Capabilities />
+          <ClosingCta />
+        </main>
+      </ErrorBoundary>
       <SiteFooter />
 
       {/* Cookieless, so no consent banner stands between a visitor and the
