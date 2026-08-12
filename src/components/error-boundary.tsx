@@ -40,7 +40,15 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!this.state.failed) return this.props.children
 
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-ink px-6">
+      // Carries the id because it REPLACES the real one. The skip link is
+      // rendered outside every boundary and always points at #main, so
+      // without this the first thing in the tab order goes nowhere for the
+      // whole time the failure is on screen. Exactly one #main exists in
+      // either state: this renders only once the real one is gone.
+      <main
+        id="main"
+        className="flex min-h-dvh items-center justify-center bg-ink px-6"
+      >
         <div className="max-w-sm text-center">
           <p className="font-display text-3xl leading-tight text-bone">
             Something broke on our side.
