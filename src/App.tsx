@@ -19,20 +19,25 @@ export function App() {
         Skip to content
       </a>
 
-      {/* Wrapping the sections rather than the whole tree: the header and the
-          footer carry the only two ways to reach us, so a section that throws
-          should not take the address with it. */}
-      <SiteHeader />
+      {/* Two boundaries, and the nesting is the point. The inner one keeps a
+          section that throws from taking the header and footer with it, since
+          those carry the only two ways to reach us. The outer one is what
+          catches the header or the footer itself — without it, a throw there
+          still leaves the black screen this exists to prevent, just from a
+          different component. Inner first: React uses the nearest one. */}
       <ErrorBoundary>
-        <main id="main">
-          <Hero />
-          <HowItWorks />
-          <AgentSession />
-          <Capabilities />
-          <ClosingCta />
-        </main>
+        <SiteHeader />
+        <ErrorBoundary>
+          <main id="main">
+            <Hero />
+            <HowItWorks />
+            <AgentSession />
+            <Capabilities />
+            <ClosingCta />
+          </main>
+        </ErrorBoundary>
+        <SiteFooter />
       </ErrorBoundary>
-      <SiteFooter />
 
       {/* Cookieless, so no consent banner stands between a visitor and the
           form. It exists for one number: how many arrived versus how many
