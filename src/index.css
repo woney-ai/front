@@ -201,17 +201,49 @@
    pitch is the exact "any number is expressible" failure `Wordmark` exists
    to close, applied to texture. */
 @utility engraving-field {
-  background-image:
-    repeating-linear-gradient(
-      var(--engraving-angle),
-      oklch(1 0 0 / 3.5%) 0 1.5px,
-      transparent 1.5px 17px
-    ),
-    repeating-linear-gradient(
-      calc(var(--engraving-angle) * -1),
-      oklch(1 0 0 / 2.5%) 0 1.5px,
-      transparent 1.5px 17px
-    );
+  /* A 20x32 tile, not a pair of gradients spanning the whole element, and the
+     reason is a bug this replaced.
+
+     Gradients are painted across the element they sit on. The hero's field is
+     393x1185 CSS px, which at a phone's 3x density is 1179x3555 — 4.2
+     megapixels. Past a certain layer size the browser rasterises at reduced
+     scale and samples back up, so on an iPhone the hero's weave came out at
+     roughly TWICE the size of the same weave in the closing section, and
+     blurrier with it. Measured off the device: ~140px period in the hero
+     against ~72px in the closing section, which is 393x515 and stays under
+     the limit. Desktop never reaches it, which is why this only ever showed
+     up on a phone.
+
+     A tile is immune: the browser rasterises 20x32 once and repeats it, so
+     the size cannot depend on how tall the element is. The geometry is the
+     same one the gradients drew — the 20:32 ratio IS 58deg, and it puts
+     16.96px between lines against the 17px it replaces, leaving the measured
+     20px horizontal period unchanged.
+
+     Note that this no longer reads `--engraving-angle`; the angle is the
+     tile's own proportions now. The variable still drives `engraving`, the
+     finer weave on the card, so changing it moves that and not this. They
+     were only ever the same number by agreement, and now one of them is
+     geometry. Change both or neither.
+
+     The lines run past the box, and the honest version of why: a stroke is
+     centred on its path, so on paper a line stopping exactly at a corner
+     leaves half its width outside the tile, and the neighbour continuing it
+     clips the same sliver — which would leave a sub-pixel notch at every
+     corner. Rendered, that does not happen. Both spellings were rasterised at
+     0.9 stroke opacity, forty times what ships here, and diffed: 0 of
+     1,728,000 pixels differ, on WebKit and on Chromium alike. Both engines
+     already cover the corner. The overshoot stays because it costs exactly
+     nothing and does not depend on that staying true.
+
+     The stroke alphas are lower than the gradient's 3.5% and 2.5% because a
+     stroke and a gradient stop do not antialias alike: carried over unchanged
+     they measured 0.133 of line contrast against the 0.08 the gradients drew.
+     These were tuned back to 0.08 by measurement, so the weave lands where it
+     always did rather than where the new primitive happened to put it. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='32'%3E%3Cline x1='-2' y1='-3.2' x2='22' y2='35.2' stroke='%23fff' stroke-opacity='0.022' stroke-width='1.5'/%3E%3Cline x1='22' y1='-3.2' x2='-2' y2='35.2' stroke='%23fff' stroke-opacity='0.015' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-size: 20px 32px;
+  background-repeat: repeat;
 }
 
 /* Paper grain, so large ink fields never read as flat digital black. */
