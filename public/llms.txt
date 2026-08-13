@@ -1,0 +1,40 @@
+# Woney
+
+> Payments infrastructure that gives an AI agent a way to pay that is never its owner's card.
+
+Woney creates a card for each purchase, so an AI agent can pay at any online store on its owner's behalf. The agent shops and checks out the way a person would, and nothing changes on the store's side. It never gets the owner's card, and once a payment goes through, the card it used stops working. The owner decides how much it can spend.
+
+Woney is in private beta and not yet generally available. Access opens in batches from a waitlist at https://woney.ai.
+
+## How it is used
+
+- **Set a limit.** The owner decides how much the agent can spend. It works freely inside that limit and is not asked to approve every purchase.
+- **The agent shops.** It searches, compares and pays at any online store, the same way a person would. Nothing changes on the store's side.
+- **One card per purchase.** Each purchase gets its own card, for one store and one amount. Once the payment goes through, the card stops working.
+
+## What the card enforces
+
+The limits live in the card itself rather than in instructions the agent is asked to follow.
+
+- One card per purchase, which stops working once the payment goes through
+- Each card is created for the exact total of that purchase
+- Each card only works at the store it was created for
+- The agent buys on its own under the owner's limit; over it, the purchase waits for approval
+- A receipt for every purchase, for the agent and for the owner
+- A record of who asked, what the agent decided, and which card paid
+- The owner's real card is never given to the agent
+
+## How an agent reaches it
+
+An agent reaches Woney through an MCP server or a command-line tool. Both are being built.
+
+## What Woney is not
+
+- **Not a checkout.** The store's checkout is the same page every shopper gets, and the agent works through it exactly as a person would. Woney supplies the card; the buying is the agent's.
+- **Not a merchant integration.** Nothing is required of the store.
+
+## Links
+
+- [Woney](https://woney.ai): the product, the three steps, and an example session showing one purchase completing and one held for approval
+- [LinkedIn](https://www.linkedin.com/company/woney-ai/): what is being built
+- Contact: hello@woney.ai
