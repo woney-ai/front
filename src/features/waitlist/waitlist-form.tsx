@@ -11,6 +11,31 @@ import { cn } from '@/lib/utils'
 import { joinWaitlist } from './api'
 import { waitlistSchema, type WaitlistInput } from './schema'
 
+/**
+ * Every string this component swaps sits inside its own element, and that is
+ * load-bearing rather than tidy markup.
+ *
+ * Chrome translates pages on its own — an Android visitor reading Spanish gets
+ * the page rewritten before they touch anything. The translator does not edit
+ * text in place: it re-parents each text node into a `<font>` wrapper of its
+ * own. React is still holding the node it created, in the place it left it.
+ * The moment this form swaps for the confirmation, React removes children it
+ * believes it owns, the DOM disagrees, and the render throws
+ * `NotFoundError: Failed to execute 'removeChild' on 'Node'` — which unmounts
+ * the tree. That is the black screen that got reported from Android Chrome,
+ * and it reproduces exactly by wrapping the text nodes the way Chrome does.
+ *
+ * Wrapping each string in an element fixes it because React then removes an
+ * ELEMENT it created, not a text node the translator moved. The wrapper is the
+ * stable thing on both sides. Bare `{value}` next to a sibling is the shape
+ * that breaks, so do not unwrap these to save a span.
+ *
+ * The precise rule is narrower than "wrap the text", and the error message
+ * below is where the difference bites: what must not toggle is the TEXT NODE.
+ * A wrapper that stays mounted while its own contents appear and disappear
+ * reproduces the bug inside itself. So either the text is present for the
+ * whole life of its parent, or the element toggles along with it.
+ */
 type FormState = 'idle' | 'joined' | 'already-joined'
 
 const successCopy: Record<Exclude<FormState, 'idle'>, string> = {
@@ -87,7 +112,7 @@ export function WaitlistForm({ className }: { className?: string }) {
         <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-signal/20">
           <Check className="size-3 text-signal" aria-hidden />
         </span>
-        {successCopy[state]}
+        <span>{successCopy[state]}</span>
       </div>
     )
   }
@@ -125,7 +150,7 @@ export function WaitlistForm({ className }: { className?: string }) {
             <Loader2 className="size-4 animate-spin" aria-hidden />
           ) : (
             <>
-              Request access
+              <span>Request access</span>
               <ArrowRight
                 className="size-3.5 transition-transform group-hover:translate-x-0.5"
                 aria-hidden
@@ -140,7 +165,13 @@ export function WaitlistForm({ className }: { className?: string }) {
         className="mt-2.5 min-h-5 font-mono text-xs text-destructive"
         role={errors.email ? 'alert' : undefined}
       >
-        {errors.email?.message}
+        {/* The whole span toggles, not the text inside it. Wrapping alone was
+            not enough here: this message comes and goes while the paragraph
+            stays mounted, so `<span>{maybeMessage}</span>` would still have
+            React inserting and removing a bare text node — the same shape,
+            one level deeper. Toggling the element means the node React
+            removes is one it created and the translator never re-parented. */}
+        {errors.email ? <span>{errors.email.message}</span> : null}
       </p>
 
       <p className="text-xs text-bone-faint">
