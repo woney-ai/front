@@ -9,11 +9,18 @@ export function Hero() {
         className="engraving-field pointer-events-none absolute inset-0"
         aria-hidden
       />
+      {/* No blur filter, deliberately. A radial gradient is already a soft
+          edge; putting a 64px blur on top of one adds almost nothing you can
+          see and costs a 2208x2208 raster buffer on a phone — about 46MB for
+          this one element, re-rasterised as it scrolls. That is the kind of
+          weight that gets a tab killed, and a killed tab is what a reload
+          loop looks like from the outside. The closing section has always
+          drawn its glow this way and reads correctly. */}
       <div
-        className="pointer-events-none absolute -top-64 right-[-10%] h-[46rem] w-[46rem] rounded-full opacity-60 blur-3xl"
+        className="pointer-events-none absolute -top-64 right-[-10%] h-[46rem] w-[46rem] rounded-full opacity-60"
         style={{
           background:
-            'radial-gradient(circle, oklch(0.85 0.072 82 / 11%) 0%, transparent 62%)',
+            'radial-gradient(circle, oklch(0.85 0.072 82 / 11%) 0%, transparent 72%)',
         }}
         aria-hidden
       />

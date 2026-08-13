@@ -2,7 +2,11 @@ import { Logo } from '@/components/brand/logo'
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-ink/80 backdrop-blur-xl">
+    // A backdrop filter re-samples everything behind it on every scroll frame,
+    // which is the most expensive thing a sticky element can do on a phone.
+    // Below sm the bar is opaque instead, so there is nothing to sample; from
+    // sm up the translucency and the blur come back.
+    <header className="sticky top-0 z-50 border-b border-line bg-ink sm:bg-ink/80 sm:backdrop-blur-xl">
       <div className="mx-auto flex h-[var(--header-h)] max-w-6xl items-center justify-between px-6">
         <a href="/" aria-label="Woney home">
           <Logo />
