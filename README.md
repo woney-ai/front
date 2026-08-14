@@ -233,16 +233,44 @@ account, not just the send.
 
 ## Branching
 
-Right now everything lands on `main`. That is deliberate while the site has
-never been served to anyone: with no production to protect, a branch-and-PR
-ceremony costs review latency and buys nothing.
+The site is live, so `main` is the released state and `develop` is the
+integration branch. Every change gets its own `type/description` branch and a
+PR into `develop`. Releases go `develop` → `main`, then a version bump, an
+annotated tag and a GitHub release.
 
-**That changes the day this deploys.** Once the site is live, `main` becomes the
-released state, `develop` becomes the integration branch, and every change goes
-through its own `type/description` branch and a PR into `develop`.
+### The trunk branches refuse direct commits
 
-The trigger is the first Vercel deploy, not a date. If you are reading this and
-the site is public, the flow above is already overdue.
+`.githooks/pre-commit` rejects a commit made while you are standing on `main`
+or `develop`. It is versioned rather than left in `.git/hooks` so it protects
+whoever clones this, not just the machine it was written on; `bun install`
+points git at it through the `prepare` script.
+
+That script checks for a git directory before writing anything, and the guard
+is not decoration: `git config` exits non-zero outside a work tree, a failing
+`prepare` fails the whole install, and `vercel.json` runs the install as a
+separate step from the build. Without the check, installing anywhere without
+`.git` — a container stage that copies only the manifest, a tarball, a CI job
+that drops VCS metadata — takes the deploy down with it. Measured: `bun
+install` exits 128 unguarded and 0 with the check.
+
+To wire it up by hand:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It exists because the mistake is quiet. Work lands on the wrong branch, nothing
+complains, and it is only expensive once it is pushed. The hook stays out of
+the way in the states where the branch is not a choice — mid-rebase, mid-merge,
+mid-cherry-pick, detached HEAD — and it tells you how to recover if you already
+committed before it stopped you.
+
+Committing on a trunk branch on purpose, which the release version bump does,
+is spelled out rather than detected:
+
+```bash
+ALLOW_DIRECT_COMMIT=1 git commit -m "chore(release): vX.Y.Z"
+```
 
 ## Deploy (Vercel)
 
