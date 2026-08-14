@@ -1,0 +1,65 @@
+#!/bin/sh
+#
+# Refuses a commit made directly on main or develop.
+#
+# This exists because it happened three times in one session: work landed on
+# develop, then on main, and each time it was caught by noticing rather than by
+# anything structural. Noticing does not scale. The recovery is easy while the
+# commits are still local and unpleasant once they are pushed, so the check
+# belongs at the moment of commit.
+#
+# The release flow legitimately commits a version bump onto develop. That is
+# what ALLOW_DIRECT_COMMIT is for — an explicit, visible opt-out rather than a
+# clever exception this hook tries to detect.
+
+[ -n "$ALLOW_DIRECT_COMMIT" ] && exit 0
+
+git_dir=$(git rev-parse --git-dir)
+
+# Mid-rebase, mid-merge, mid-cherry-pick: the branch you are on is an artefact
+# of the operation, not a choice, and blocking here would strand the working
+# tree in a half-finished state.
+for state in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD; do
+  if [ -e "$git_dir/$state" ]; then
+    exit 0
+  fi
+done
+
+# Detached HEAD has no branch to protect.
+branch=$(git symbolic-ref --short -q HEAD) || exit 0
+
+# Reading this backwards is easy, so: the MATCHING arm is the empty one. A
+# trunk branch falls out of the case and continues down to the refusal; every
+# other branch leaves here. Adding a third protected branch means adding it to
+# the first arm, not the second.
+case "$branch" in
+  main | develop) ;;
+  *) exit 0 ;;
+esac
+
+cat >&2 <<EOF
+
+  Refusing to commit directly on '$branch'.
+
+  Move the work to a branch and commit there:
+
+      git switch -c <branch-name>
+
+  Your staged changes come with you — nothing is lost, nothing is undone.
+
+  If you already committed here before this hook stopped you, keep the
+  commits on a branch and put $branch back where the remote has it. The
+  reset throws away anything still uncommitted, so stash first if you
+  have unrelated edits open:
+
+      git branch <branch-name>
+      git reset --hard origin/$branch
+      git switch <branch-name>
+
+  To commit here on purpose — a release version bump, say:
+
+      ALLOW_DIRECT_COMMIT=1 git commit ...
+
+EOF
+
+exit 1
