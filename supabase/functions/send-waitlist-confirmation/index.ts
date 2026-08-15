@@ -33,6 +33,10 @@ const SEND_INTERVAL_MS = 550
 const DNS_TIMEOUT_MS = 3_000
 const SEND_TIMEOUT_MS = 15_000
 
+/** Short on purpose. This one only decorates the letter, so it should give up
+ *  long before it costs the batch anything. */
+const JOIN_DATE_TIMEOUT_MS = 3_000
+
 const RESEND_ENDPOINT = 'https://api.resend.com/emails'
 
 function required(name: string): string {
@@ -131,8 +135,9 @@ async function send(
   replyTo: string,
   to: string,
   rowId: string,
+  joinedAt: Date | undefined,
 ): Promise<string | null> {
-  const { subject, html, text } = confirmationEmail(to)
+  const { subject, html, text } = confirmationEmail(to, joinedAt)
 
   const response = await fetch(RESEND_ENDPOINT, {
     method: 'POST',
@@ -198,6 +203,57 @@ Deno.serve(async () => {
     return Response.json({ claimed: 0, sent: 0, failed: 0 })
   }
 
+  // The pass prints the day they joined, and the claim function returns only
+  // an id and an address. One read fills that in for the whole batch.
+  //
+  // A read rather than a wider return type on purpose: `claim_waitlist_
+  // confirmations` is the piece that holds the lease and the daily budget, and
+  // changing its signature means dropping and recreating it in production. A
+  // date on a credential is not worth taking the mailer offline for.
+  //
+  // If the read fails the letter still goes out, dated today. Every row here
+  // was just claimed and the trigger path sends within seconds of the insert,
+  // so today is right for almost all of them and wrong by a day for a row that
+  // sat in a backlog overnight. Losing a send over that would be the worse
+  // trade.
+  //
+  // Which is why it is bounded and caught, like every other outbound call in
+  // this file. Written without either, the claim above was false: a client
+  // returns `{ error }` for an HTTP failure but a network-level fetch can
+  // reject outright, and an unbounded call does not fail at all — it hangs,
+  // holding the whole invocation before a single send has been attempted. The
+  // batch is already claimed at this point, so that is not one missing date,
+  // it is a run that mails nobody and leaves every row waiting for its lease
+  // to expire. A decoration on a credential must not be able to do that.
+  const joinedById = new Map<string, Date>()
+
+  try {
+    const { data: joinRows, error: joinError } = await supabase
+      .from('waitlist')
+      .select('id, created_at')
+      .in(
+        'id',
+        pending.map((row) => row.id),
+      )
+      .abortSignal(AbortSignal.timeout(JOIN_DATE_TIMEOUT_MS))
+
+    if (joinError) {
+      console.error(
+        'could not read join dates; dating this batch today',
+        joinError,
+      )
+    } else {
+      for (const row of (joinRows ?? []) as {
+        id: string
+        created_at: string
+      }[]) {
+        joinedById.set(row.id, new Date(row.created_at))
+      }
+    }
+  } catch (cause) {
+    console.error('join date read failed; dating this batch today', cause)
+  }
+
   let sent = 0
   let failed = 0
   let unmarked = 0
@@ -226,7 +282,14 @@ Deno.serve(async () => {
     let messageId: string | null
 
     try {
-      messageId = await send(apiKey, from, replyTo, row.email, row.id)
+      messageId = await send(
+        apiKey,
+        from,
+        replyTo,
+        row.email,
+        row.id,
+        joinedById.get(row.id),
+      )
     } catch (cause) {
       // The row keeps confirmation_sent_at null, so the next run retries it
       // once the lease expires — up to max_attempts, then it is abandoned.

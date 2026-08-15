@@ -36,5 +36,6 @@ An agent reaches Woney through an MCP server or a command-line tool. Both are be
 ## Links
 
 - [Woney](https://woney.ai): the product, the three steps, and an example session showing one purchase completing and one held for approval
-- [LinkedIn](https://www.linkedin.com/company/woney-ai/): what is being built
+- [X](https://x.com/woney_ai): what is being built, as it is built
+- [LinkedIn](https://www.linkedin.com/company/woney-ai/): the same, for a different room
 - Contact: hello@woney.ai
