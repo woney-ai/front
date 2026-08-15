@@ -1,21 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Woney">
-  <!-- Not the chip mark. That mark is the identity everywhere it has room, but
-       at 16px — which is the only size that matters here — its contact
-       channels collapse into a gold smudge and the W stops being readable.
-       Measured, not assumed: rendered side by side at tab size, the letter
-       wins and the mark does not.
+  <!-- The monogram, which is what the LinkedIn and X profiles carry.
 
-       So this keeps the letterform and takes everything else from the family:
-       the squircle of the chip, ink-deep for the ground, foil for the stroke.
-       The one thing it must do is survive being 16 pixels wide, and a single
-       thick stroke does that where five channels cannot. -->
+       Not the chip mark, and not by preference. Rendered side by side at tab
+       size the chip loses: its contact channels are what draw the letter, and
+       below about 24px they close up into a gold smudge with no W left in it.
+       The monogram survives because a serif W is one shape, not five gaps.
+
+       Not live text either. A favicon cannot load a webfont — browsers do not
+       fetch one for an icon — so the letterform is traced from Instrument
+       Serif at 1100px and carried here as a path. It renders identically
+       everywhere because there is nothing left to resolve.
+
+       Ink ground, bone letter, foil stop: the same three parts as the avatar,
+       in the same arrangement, so a tab and a profile read as one thing. -->
   <rect width="32" height="32" rx="9" fill="#03050a" />
-  <path
-    d="M7 11 L11.5 22 L16 14.5 L20.5 22 L25 11"
-    fill="none"
-    stroke="#e5ca98"
-    stroke-width="3.4"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <g transform="translate(5.300,7.626) scale(0.018824)">
+    <g transform="translate(0,741) scale(0.1,-0.1)" fill="#f3f0e8" stroke="none">
+      <path d="M0 7307 l0 -103 93 -13 c166 -22 339 -94 454 -189 53 -44 139 -150
+185 -227 124 -208 361 -768 651 -1540 471 -1254 1125 -3061 1481 -4093 l392
+-1137 85 -3 84 -2 113 312 c682 1892 1577 4337 1583 4326 4 -7 302 -774 662
+-1703 614 -1587 755 -1964 1074 -2893 l15 -42 83 0 83 0 91 273 c49 149 200
+605 334 1012 135 407 340 1003 457 1325 116 322 473 1314 792 2205 688 1922
+640 1792 690 1885 151 284 345 417 708 487 l90 17 0 103 0 103 -1090 0 -1090
+0 0 -104 0 -103 107 -7 c268 -18 436 -76 545 -188 75 -77 118 -191 118 -311 0
+-117 -59 -399 -124 -600 -36 -108 -1392 -3798 -1430 -3890 -10 -25 -20 -4
+-143 315 -72 189 -425 1104 -783 2033 -871 2260 -800 2061 -800 2211 0 189 90
+326 249 378 74 25 234 46 404 53 l157 6 0 104 0 103 -1470 0 -1470 0 0 -105 0
+-105 60 0 c91 0 244 -19 343 -42 217 -50 393 -197 505 -421 42 -84 563 -1400
+565 -1427 1 -15 -1151 -3078 -1163 -3093 -3 -4 -47 100 -97 230 -50 131 -413
+1075 -806 2098 -393 1023 -731 1910 -750 1970 -87 273 -73 432 48 544 56 52
+126 85 220 105 83 17 254 36 331 36 l54 0 0 105 0 105 -1345 0 -1345 0 0 -103z" />
+    </g>
+  </g>
+  <circle cx="25.1" cy="20.2" r="2.05" fill="#e5ca98" />
 </svg>

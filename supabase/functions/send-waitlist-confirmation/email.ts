@@ -42,6 +42,99 @@ const LINE = '#1d2025'
 const FOIL_LINE = '#3e3a32'
 
 const LINKEDIN = 'https://www.linkedin.com/company/woney-ai/'
+const X_PROFILE = 'https://x.com/woney_ai'
+const X_HANDLE = '@woney_ai'
+
+/**
+ * The share is the only thing in this letter that can grow the list, so it is
+ * the letter's main action rather than a footnote.
+ *
+ * A confirmation is read at the one moment goodwill is highest: the reader has
+ * just signed up, is pleased with themselves, and has us open in front of
+ * them. Asking then costs nothing; asking later means asking someone who has
+ * moved on. The version before this one only offered a follow, which moves a
+ * number that never becomes a signup.
+ *
+ * A POST RATHER THAN A FORWARD, and the first attempt got this wrong. It
+ * opened a prefilled `mailto:`, which on a phone throws the reader into their
+ * mail app staring at a draft — an errand, and one almost nobody finishes.
+ * Worse, it is private: the best case reaches one person.
+ *
+ * A post is public, so it reaches everyone who already chose to listen to
+ * them, and "I am on the waitlist" is social proof in a way a forwarded note
+ * can never be. It is also where this audience is: whoever ends up pointing an
+ * agent at a checkout reads X, not a newsletter.
+ *
+ * The text is written in the sharer's voice, not ours, and leads with the
+ * problem rather than our name — nobody posts an advertisement, and everybody
+ * posts a thing they found. An earlier draft described the product in the
+ * third person, which is an advertisement wearing someone else's account.
+ *
+ * IT CLAIMS ONE THING, AND ONLY BECAUSE THAT ONE IS BUILT. Single use is
+ * enforced in three layers. A merchant lock is not: `intended_merchant` is a
+ * memo string and nothing restricts where a card can be spent, which is why
+ * "one store" is absent here even though it reads well. A page can be
+ * corrected with a deploy. A post that spread cannot, and this one is about
+ * money — the reader is being asked to put their own name behind it.
+ */
+/**
+ * Two tags, and the number is the decision.
+ *
+ * They buy less than they used to: X recommends on what a post says rather
+ * than on what it is tagged with, so these are not reach. What they still do
+ * is land in search and in the saved searches people in a niche actually
+ * watch, which is the only reason to carry any.
+ *
+ * Which is also why there are two and not four. Everything above this line is
+ * written to sound like a person; a stack of tags turns the same words into an
+ * advertisement, and an advertisement posted from someone else's account is
+ * exactly what nobody agrees to send. Two at the end read as subject matter.
+ *
+ * `MCP` over anything broader because it is how an agent actually reaches us,
+ * so it reaches the one reader who could integrate rather than the one who
+ * merely approves of the idea. `payments` or `fintech` would be a wider net
+ * over an audience that will never write the code.
+ *
+ * The handle replaced a bare `woney.ai` in the second line, and that is not a
+ * cosmetic swap. Written as plain text, a post goes out and we never learn it
+ * happened — no notification, nothing to reply to, nothing to amplify. A
+ * mention arrives. The domain still appears at the end so the post carries a
+ * destination for anyone reading it outside the app.
+ */
+const SHARE_POST = `Handing an AI agent your credit card is the part nobody wants to talk about.
+
+${X_HANDLE} gives it a card of its own: one purchase, dead the second it pays.
+
+Just joined the waitlist. woney.ai
+
+#AIAgents #MCP`
+
+const SHARE_URL = `https://x.com/intent/post?text=${encodeURIComponent(SHARE_POST)}`
+
+/**
+ * Both arguments are pinned, and each one is pinned against a different way of
+ * being wrong.
+ *
+ * The locale, because the default follows whatever the runtime is set to —
+ * which is how the same letter goes out reading `8/14/2026` to one reader and
+ * `14/8/2026` to the next. Spelling the month removes the ambiguity entirely.
+ *
+ * The timezone, because a server's is an accident of where it is running, and
+ * a date that moves with the deploy region is worse than one that is merely
+ * not local. Worth saying plainly: UTC is not the reader's day. Someone who
+ * joins late in the evening west of UTC gets a pass dated tomorrow, and
+ * someone early in the morning east of it gets yesterday. That is at most a
+ * day, on a field whose job is to say roughly when they were here, and the
+ * alternative needs a timezone we never asked for and have no honest way to
+ * guess. If we ever collect one, this is the line that should read it.
+ */
+const joinedOn = (at: Date) =>
+  at.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
 
 export type ConfirmationEmail = {
   subject: string
@@ -87,43 +180,102 @@ function unlinkable(escapedAddress: string): string {
   return `<a style="color:${BONE};text-decoration:none;"><span style="color:${BONE};text-decoration:none;">${escapedAddress}</span></a>`
 }
 
-export function confirmationEmail(recipient: string): ConfirmationEmail {
+export function confirmationEmail(
+  recipient: string,
+  joinedAt?: Date,
+): ConfirmationEmail {
+  const joined = joinedOn(joinedAt ?? new Date())
   return {
-    subject: 'You are on the Woney list',
-    text: text(recipient),
-    html: html(unlinkable(escapeHtml(recipient))),
+    // The subject confirms AND says what the product is, because this line
+    // outlives the moment. `You are on the Woney list` was a receipt: it wins
+    // an open it was going to get anyway — confirmations are opened because
+    // they are expected — and then sits in an inbox for months saying nothing
+    // about what was joined. Someone searching their mail next quarter should
+    // land on the promise, not the transaction.
+    subject: 'You are on the list. Soon your agent can pay.',
+    text: text(recipient, joined),
+    html: html(unlinkable(escapeHtml(recipient)), joined),
   }
 }
 
-const text = (recipient: string) => `You are on the list.
+const text = (recipient: string, joined: string) => `You are on the list.
 
-Woney gives your agent a way to pay that is never your card. Each
-purchase gets its own card, for one store and one amount. Once the
-payment goes through, the card stops working.
+Your agent can already find the thing, compare sellers and fill the
+cart. It stops at the part where paying means handing over your card.
+Woney is what it uses instead: a card of its own, for that one
+purchase, that stops working the moment the payment goes through.
 
   ACCESS PASS
   Holder   ${recipient}
-  Status   On the list
+  Joined   ${joined}
   Access   Rolling batches
 
-We are opening access in batches. When yours comes up, this is the
-address we will write to.
+This is the address we will write to when your batch comes up.
 
-Until then, you can watch it take shape. We post what we are building
-on LinkedIn:
+Post it on X:
 
+  ${SHARE_URL}
+
+One question, and the answer shapes what we build first: what would
+you point an agent at? Just reply to this email. A person reads
+every one.
+
+We also post what we are building:
+
+  ${X_PROFILE}
   ${LINKEDIN}
-
-If you want to tell us what you would point an agent at first, just
-reply. A person reads them.
 
 woney.ai
 
 You are receiving this because you joined the waitlist at woney.ai.`
 
+/**
+ * The head, and it is not decoration — without it this letter goes out blank.
+ *
+ * Mail clients with a dark theme do not all leave a dark message alone. Some
+ * apply PARTIAL inversion: they flip background colours and honour the inline
+ * `color` on the text, which is the one combination that destroys a letter
+ * built like this one. Measured on the version before this head existed, by
+ * inverting backgrounds and leaving the authored text colours untouched, the
+ * worst pair came out at 1.05:1 — the headline, the emphasised line, the
+ * wordmark and the reader's own address all rendered white on white. Anything
+ * under 4.5:1 is hard to read; 1.05 is not there at all.
+ *
+ * `color-scheme` is how a message says it is already dark and needs no help.
+ * Clients that honour it stop rewriting anything. Outlook.com does not read
+ * it — it stamps `data-ogsb` and `data-ogsc` on elements it has recoloured, so
+ * those attributes are used to put the palette back.
+ *
+ * This does not make the problem impossible everywhere; some clients invert
+ * regardless of what a message asks for. It removes the case that is ours to
+ * remove, and the rest needs a real device to answer.
+ */
+const head = `<!doctype html>
+<html lang="en" style="color-scheme:dark;supported-color-schemes:dark;">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<meta name="supported-color-schemes" content="dark" />
+<style>
+  :root { color-scheme: dark; supported-color-schemes: dark; }
+
+  /* Outlook.com stamps these attributes on what it has recoloured. Only the
+     two backgrounds are restored here, deliberately: every text colour in this
+     letter is already inline, so putting the dark panels back is enough to
+     make them legible again. Re-asserting each text colour would need a class
+     on all twenty of them to preserve the hierarchy, and a blanket rule would
+     flatten it — one grey where there are now three. */
+  [data-ogsb] .ink-deep, [data-ogsc] .ink-deep { background-color: ${INK_DEEP} !important; }
+  [data-ogsb] .ink, [data-ogsc] .ink { background-color: ${INK} !important; }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:${INK_DEEP};">`
+
 const html = (
   recipient: string,
-) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
+  joined: string,
+) => `${head}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" class="ink-deep" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
   <tr>
     <td align="center" style="padding:40px 16px;">
 
@@ -136,18 +288,27 @@ const html = (
              sender name and the subject have already said who this is from.
              The letter starts on the sentence the reader came for. -->
         <tr>
-          <td bgcolor="${INK}" style="background-color:${INK};padding:44px 40px 40px;">
+          <td bgcolor="" class="ink" style="background-color:;padding:44px 40px 40px;">
 
             <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:1.08;letter-spacing:-0.015em;font-weight:400;color:${BONE};">
               You are on<br />
               <em style="color:${FOIL};font-style:italic;">the list.</em>
             </h1>
 
+            <!-- This opens on what the agent can do, not on how a card is
+                 issued. The old first line led with the mechanism — one card
+                 per purchase, one store, one amount — which is the answer to a
+                 question the reader has not asked yet. They arrived from a
+                 page whose headline is "Agents can shop. They can't pay."; a
+                 letter that drops the tension and starts explaining plumbing
+                 is a step backwards from the thing that persuaded them. -->
             <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
-              Woney gives your agent a way to pay that is
-              <span style="color:${BONE};">never your card</span>. Each purchase
-              gets its own card, for one store and one amount. Once the payment
-              goes through, the card stops working.
+              Your agent can already find the thing, compare sellers and fill
+              the cart. It stops at the part where
+              <span style="color:${BONE};">paying means handing over your
+              card</span>. Woney is what it uses instead: a card of its own,
+              for that one purchase, that stops working the moment the payment
+              goes through.
             </p>
 
             <!-- The pass. A confirmation is the one place an object belongs:
@@ -157,7 +318,7 @@ const html = (
                  position — only what is true. -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;">
               <tr>
-                <td bgcolor="${INK_DEEP}" style="background-color:${INK_DEEP};border:1px solid ${FOIL_LINE};padding:22px 24px;">
+                <td bgcolor="" class="ink-deep" style="background-color:;border:1px solid ${FOIL_LINE};padding:22px 24px;">
 
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
@@ -183,10 +344,18 @@ const html = (
                     </tr>
                   </table>
 
+                  <!-- The status field went, and a real date took its place.
+                       It read "On the list", which the headline three lines up
+                       already says, so it spent a row of a credential
+                       repeating it. A join date is the one true thing this
+                       pass can carry that gets more valuable with time: in a
+                       year it is evidence of having been early, which is worth
+                       having and worth showing. Still no queue position and no
+                       promised date, because neither would be true. -->
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0 0;">
                     <tr>
                       <td width="50%" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
-                        Status
+                        Joined
                       </td>
                       <td width="50%" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:${BONE_FAINT};">
                         Access
@@ -194,7 +363,7 @@ const html = (
                     </tr>
                     <tr>
                       <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:13px;color:${BONE_DIM};">
-                        On the list
+                        ${joined}
                       </td>
                       <td style="padding:5px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:13px;color:${BONE_DIM};">
                         Rolling batches
@@ -206,46 +375,107 @@ const html = (
               </tr>
             </table>
 
+            <!-- One sentence, and it took two drafts to get there.
+                 It opened on "we open access in batches", which the pass three
+                 lines above already states as its own field — the reader had
+                 just been told, in a credential with their name on it. Prose
+                 that repeats the object beside it makes both weaker.
+                 What survives is the half the pass cannot say: that this
+                 address is the one we use, and that nothing else is coming.
+                 A waitlist with no stated cadence is one people brace against,
+                 and the bracing arrives later as an unsubscribe on the mail
+                 that actually matters. -->
             <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
-              We are opening access in batches. When yours comes up, this is
-              the address we will write to.
+              This is the address we will write to when your batch comes up.
             </p>
 
-            <!-- This used to end on "there is nothing else for you to do",
-                 which is accurate and closes the door: it tells someone the
-                 relationship is over until an unspecified day. The waiting is
-                 the same either way, so give them somewhere to spend it. -->
-            <p style="margin:20px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
-              Until then, you can watch it take shape. We post what we are
-              building on LinkedIn.
-            </p>
+            <!-- The share is the button and nothing else.
+                 It has lost a paragraph and then a sentence, and each cut made
+                 it better. First it argued the case — "the most useful thing
+                 you can do for us today" — which on a confirmation reads as a
+                 pitch arriving before the product does. Then it explained
+                 itself, which is the same thing said quietly.
+                 A button on a rule, with a label that says exactly what
+                 happens: anyone inclined to help does not need persuading, and
+                 anyone who is not can skip it without reading a word. -->
+            <!-- The rule is its own full-width table. Hung on the button's
+                 table instead, it inherited that table's width and drew a
+                 stub the length of the button. -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:34px 0 0;">
+              <tr>
+                <td height="1" style="height:1px;line-height:1px;font-size:1px;border-top:1px solid ${LINE};">&nbsp;</td>
+              </tr>
+            </table>
 
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 0;">
               <tr>
                 <td bgcolor="${FOIL}" style="background-color:${FOIL};">
-                  <a href="${LINKEDIN}" style="display:inline-block;padding:15px 24px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:14px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
-                    Follow Woney &rarr;
+                  <a href="${SHARE_URL}" style="display:inline-block;padding:15px 24px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:14px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
+                    Post it on X &rarr;
                   </a>
                 </td>
               </tr>
             </table>
 
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;border-top:1px solid ${LINE};">
-              <tr>
-                <td style="padding:24px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:${BONE_DIM};">
-                  If you want to tell us what you would point an agent at
-                  first, just reply.
-                  <span style="color:${BONE};">A person reads them.</span>
-                </td>
-              </tr>
-            </table>
+            <!-- The reply ask closes the letter, and the position is the whole
+                 argument for it.
+                 It began buried in the footer, moved to the middle, and ends
+                 here: last is where a reader is most likely to act, because
+                 nothing follows to distract them, and it is the note they
+                 leave with. Everything above it is us telling them things.
+                 This is the one line that hands the conversation back.
+                 It also earns its keep three ways — at twenty-two signups the
+                 answers are the clearest product research available, being
+                 asked is what turns a stranger into a participant, and a reply
+                 teaches the mail provider we are a correspondent rather than a
+                 sender, which is worth more to deliverability than anything we
+                 could put in a header. -->
+            <p style="margin:30px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+              <span style="color:${BONE};">One question, and the answer shapes
+              what we build first: what would you point an agent at?</span>
+              Just reply to this email. A person reads every one.
+            </p>
 
           </td>
         </tr>
 
+        <!-- The footer, which is where a letter says who sent it and how to
+             reach them. It was one line of legal text.
+
+             The icons are hosted PNGs, because SVG is stripped and a data URI
+             is dropped by most clients. Each carries alt text and sits inside
+             a link, so a client with images off — which is the default in
+             Outlook and common elsewhere — still shows a readable, clickable
+             word rather than a broken frame. That is the whole reason the row
+             is not icons alone. -->
         <tr>
-          <td style="padding:22px 40px 0;">
-            <p style="margin:0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:1.8;letter-spacing:0.06em;color:${BONE_FAINT};">
+          <td style="padding:26px 40px 0;">
+
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="left" style="font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1;color:${BONE};">
+                  woney<span style="color:${FOIL};">.</span>
+                </td>
+                <!-- The anchor is styled, not just the image, because the
+                     styling IS the fallback. With images off the alt text is
+                     what renders, and an unstyled anchor serves it as default
+                     blue underlined browser text — which looks like something
+                     broke rather than like a link somebody meant. Dressed
+                     this way it degrades to the word "LinkedIn" set in the
+                     letter's own type. -->
+                <td align="right" style="font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.1em;">
+                  <a href="${X_PROFILE}" style="color:${BONE_DIM};text-decoration:none;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.1em;">
+                    <img src="https://woney.ai/email/x.png" width="30" height="30" alt="X" style="display:inline-block;border:0;outline:none;width:30px;height:30px;color:${BONE_DIM};font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.1em;text-decoration:none;" />
+                  </a>
+                  <span style="display:inline-block;width:10px;">&nbsp;</span>
+                  <a href="${LINKEDIN}" style="color:${BONE_DIM};text-decoration:none;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.1em;">
+                    <img src="https://woney.ai/email/linkedin.png" width="30" height="30" alt="LinkedIn" style="display:inline-block;border:0;outline:none;width:30px;height:30px;color:${BONE_DIM};font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:0.1em;text-decoration:none;" />
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:22px 0 0;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:1.8;letter-spacing:0.06em;color:${BONE_FAINT};">
               You are receiving this because you joined the waitlist at
               <a href="https://woney.ai" style="color:${BONE_FAINT};text-decoration:underline;">woney.ai</a>.
             </p>
@@ -256,4 +486,6 @@ const html = (
 
     </td>
   </tr>
-</table>`
+</table>
+</body>
+</html>`

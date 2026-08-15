@@ -90,6 +90,31 @@ const ASSETS: Asset[] = [
       <div style="font-family:'Instrument Serif',serif;font-size:440px;line-height:1;color:${BONE};transform:translateY(-14px);">W<span style="color:${FOIL};">.</span></div>
     </div>`,
   },
+  // The two profile pictures. Same artwork, two sizes, because the platforms
+  // ask for different ones and neither crops the way the other does: X shows a
+  // circle, a LinkedIn page logo shows a rounded square. The composition
+  // survives both — measured on the 800px master, the mark sits 27% of the
+  // side away from the nearest edge and not one pixel of it falls outside the
+  // inscribed circle, so the circle takes only engraved ground.
+  //
+  // The monogram and not the chip, because that is what the profiles carry and
+  // what the favicon now traces. One letter in three places.
+  {
+    name: 'avatar-x',
+    width: 400,
+    height: 400,
+    body: `<div style="${engraving};width:400px;height:400px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-family:'Instrument Serif',serif;font-size:220px;line-height:1;color:${BONE};transform:translateY(-7px);">W<span style="color:${FOIL};">.</span></div>
+    </div>`,
+  },
+  {
+    name: 'avatar-linkedin',
+    width: 400,
+    height: 400,
+    body: `<div style="${engraving};width:400px;height:400px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-family:'Instrument Serif',serif;font-size:220px;line-height:1;color:${BONE};transform:translateY(-7px);">W<span style="color:${FOIL};">.</span></div>
+    </div>`,
+  },
   {
     name: 'linkedin-cover',
     width: 1128,
@@ -102,15 +127,26 @@ const ASSETS: Asset[] = [
     </div>`,
   },
   {
+    // Composed like the LinkedIn cover, and for a reason that is not tidiness.
+    //
+    // The previous version set the headline flush LEFT and put the mark on the
+    // right, which is exactly backwards for this platform: the profile photo
+    // overlays the lower left of an X header, so the mono line sat underneath
+    // where the avatar lands. The two banners also read as different brands —
+    // one right-aligned and typographic, the other left-aligned with a large
+    // chip — which is the wrong impression to give someone who checks both.
+    //
+    // So: right-aligned, headline then rule line, and the left 40% left empty.
+    // The mark goes, because it is the avatar. Printing it in the header too
+    // means showing the same shape twice, once behind the other.
     name: 'x-header',
     width: 1500,
     height: 500,
-    body: `<div style="${engraving};width:1500px;height:500px;display:flex;align-items:center;justify-content:space-between;padding:0 90px 0 110px;">
-      <div>
-        <div style="font-family:'Instrument Serif',serif;font-size:76px;line-height:1.06;color:${BONE};">Agents can shop.<br /><em style="color:${FOIL};font-style:italic;">They can’t pay.</em></div>
-        <div style="margin-top:26px;font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:0.2em;text-transform:uppercase;color:${BONE_DIM};">woney.ai &nbsp;·&nbsp; Agentic payments infrastructure</div>
+    body: `<div style="${engraving};width:1500px;height:500px;display:flex;align-items:center;justify-content:flex-end;padding:0 90px 0 620px;">
+      <div style="text-align:right;">
+        <div style="font-family:'Instrument Serif',serif;font-size:62px;line-height:1.08;color:${BONE};white-space:nowrap;">Agents can shop. <em style="color:${FOIL};font-style:italic;">They can’t pay.</em></div>
+        <div style="margin-top:22px;font-family:'IBM Plex Mono',monospace;font-size:15px;letter-spacing:0.2em;text-transform:uppercase;color:${BONE_DIM};">woney.ai &nbsp;·&nbsp; Agentic payments infrastructure</div>
       </div>
-      <div style="width:230px;height:230px;flex:none;">${mark}</div>
     </div>`,
   },
 ]
