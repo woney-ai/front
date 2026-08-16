@@ -4,5 +4,10 @@
   "buildCommand": "bun run build",
   "installCommand": "bun install",
   "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/x", "destination": "/?ref=x" },
+    { "source": "/li", "destination": "/?ref=li" },
+    { "source": "/page", "destination": "/?ref=li-page" }
+  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

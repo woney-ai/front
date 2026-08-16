@@ -100,12 +100,33 @@ const X_HANDLE = '@woney_ai'
  * happened — no notification, nothing to reply to, nothing to amplify. A
  * mention arrives. The domain still appears at the end so the post carries a
  * destination for anyone reading it outside the app.
+ *
+ * The destination is a PATH and not a query parameter, because this link is
+ * rendered in public under somebody else's name. Both `?utm_source=member-
+ * share` and the shorter `?ref=share` were written and both read as tracking
+ * machinery sitting in a stranger's post — X displays the path, so whatever
+ * follows the domain is what everyone sees. A path reads like a page.
+ *
+ * ONE PATH FOR ALL OF X, deliberately. This link first pointed at `/share`,
+ * which separated a post a member published from a post we published
+ * ourselves. That distinction is the growth signal — a stranger recommending
+ * us is not the same event as us advertising — and merging the two gives it
+ * up: everything arriving through X now reports the same source, and no later
+ * query can pull them apart, because the difference was never recorded.
+ *
+ * It was merged on purpose, for one owner, one path, no ambiguity about which
+ * link to use. Worth knowing what it cost, and worth splitting again the day
+ * anyone asks whether sharing works.
+ *
+ * A redirect maps `/x` to `/?ref=x`, and the signup accepts either name —
+ * `params.get('utm_source') ?? params.get('ref')`. Today 23 of 25 signups have
+ * no recorded source at all, so any answer beats the current none.
  */
 const SHARE_POST = `Handing an AI agent your credit card is the part nobody wants to talk about.
 
 ${X_HANDLE} gives it a card of its own: one purchase, dead the second it pays.
 
-Just joined the waitlist. woney.ai
+Just joined the waitlist. woney.ai/x
 
 #AIAgents #MCP`
 
@@ -277,9 +298,29 @@ const html = (
   joined: string,
 ) => `${head}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${INK_DEEP}" class="ink-deep" style="background-color:${INK_DEEP};margin:0;padding:0;width:100%;">
   <tr>
-    <td align="center" style="padding:40px 16px;">
+    <td align="center" style="padding:32px 8px;">
 
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:560px;max-width:100%;">
+      <!-- Fluid to 560, not fixed at it.
+           This table used to assert its size twice, in the width attribute and
+           again in an inline width, and the max-width beside them could not
+           pull it back — the containing block is sized by this very table, so
+           the constraint chased its own tail. Measured on a 390pt phone, the
+           document came out 592pt wide; the client then zoomed the whole
+           letter down to make it fit, and 16px body text arrived looking like
+           11px. That is the entire reason this letter read smaller than the
+           ones sitting next to it in an inbox.
+
+           The ghost table below is not belt and braces, it is the other half
+           of the fix. Outlook renders through Word, which reads the HTML width
+           attribute and ignores CSS max-width — so the fluid table that saves
+           the phone leaves Word with no numeric cap at all, and it would
+           stretch this letter across the whole reading pane. The conditional
+           comment gives Word a fixed 560 to hold and is invisible to every
+           other client, which sees only the fluid table and its ceiling. -->
+      <!--[if mso]>
+      <table role="presentation" width="560" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td>
+      <![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;margin:0 auto;">
 
         <!-- No masthead. A wordmark and a rule opened this letter, which meant
              the mark appeared twice in the first screenful — once as chrome
@@ -288,7 +329,7 @@ const html = (
              sender name and the subject have already said who this is from.
              The letter starts on the sentence the reader came for. -->
         <tr>
-          <td bgcolor="" class="ink" style="background-color:;padding:44px 40px 40px;">
+          <td bgcolor="${INK}" class="ink" style="background-color:${INK};padding:40px 22px 36px;">
 
             <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:38px;line-height:1.08;letter-spacing:-0.015em;font-weight:400;color:${BONE};">
               You are on<br />
@@ -302,7 +343,7 @@ const html = (
                  page whose headline is "Agents can shop. They can't pay."; a
                  letter that drops the tension and starts explaining plumbing
                  is a step backwards from the thing that persuaded them. -->
-            <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+            <p style="margin:26px 0 0;font-family:Helvetica,Roboto,Arial,sans-serif;font-size:17px;line-height:1.6;color:${BONE_DIM};">
               Your agent can already find the thing, compare sellers and fill
               the cart. It stops at the part where
               <span style="color:${BONE};">paying means handing over your
@@ -318,7 +359,7 @@ const html = (
                  position — only what is true. -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0 0;">
               <tr>
-                <td bgcolor="" class="ink-deep" style="background-color:;border:1px solid ${FOIL_LINE};padding:22px 24px;">
+                <td bgcolor="${INK_DEEP}" class="ink-deep" style="background-color:${INK_DEEP};border:1px solid ${FOIL_LINE};padding:22px 24px;">
 
                   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                     <tr>
@@ -385,7 +426,7 @@ const html = (
                  A waitlist with no stated cadence is one people brace against,
                  and the bracing arrives later as an unsubscribe on the mail
                  that actually matters. -->
-            <p style="margin:26px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+            <p style="margin:26px 0 0;font-family:Helvetica,Roboto,Arial,sans-serif;font-size:17px;line-height:1.6;color:${BONE_DIM};">
               This is the address we will write to when your batch comes up.
             </p>
 
@@ -398,21 +439,28 @@ const html = (
                  A button on a rule, with a label that says exactly what
                  happens: anyone inclined to help does not need persuading, and
                  anyone who is not can skip it without reading a word. -->
-            <!-- The rule is its own full-width table. Hung on the button's
-                 table instead, it inherited that table's width and drew a
-                 stub the length of the button. -->
+            <!-- The rule is a border on the cell that holds the button, not a
+                 table of its own with a spacer inside it.
+                 The spacer version needed a filler character to give the cell
+                 something to lay out, and Gmail on Android rendered that
+                 character: a stray dash floating above the button, in a letter
+                 whose whole job is to look considered. Hanging the border on a
+                 cell that already has content to hold removes the filler, the
+                 extra table, and the artifact together. -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:34px 0 0;">
               <tr>
-                <td height="1" style="height:1px;line-height:1px;font-size:1px;border-top:1px solid ${LINE};">&nbsp;</td>
-              </tr>
-            </table>
+                <td style="border-top:1px solid ${LINE};padding:30px 0 0;">
 
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td bgcolor="${FOIL}" style="background-color:${FOIL};">
                   <a href="${SHARE_URL}" style="display:inline-block;padding:15px 24px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;line-height:14px;letter-spacing:0.16em;text-transform:uppercase;color:${INK_DEEP};text-decoration:none;">
                     Post it on X &rarr;
                   </a>
+                </td>
+              </tr>
+            </table>
+
                 </td>
               </tr>
             </table>
@@ -430,7 +478,7 @@ const html = (
                  teaches the mail provider we are a correspondent rather than a
                  sender, which is worth more to deliverability than anything we
                  could put in a header. -->
-            <p style="margin:30px 0 0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:${BONE_DIM};">
+            <p style="margin:30px 0 0;font-family:Helvetica,Roboto,Arial,sans-serif;font-size:17px;line-height:1.6;color:${BONE_DIM};">
               <span style="color:${BONE};">One question, and the answer shapes
               what we build first: what would you point an agent at?</span>
               Just reply to this email. A person reads every one.
@@ -449,7 +497,7 @@ const html = (
              word rather than a broken frame. That is the whole reason the row
              is not icons alone. -->
         <tr>
-          <td style="padding:26px 40px 0;">
+          <td style="padding:26px 22px 0;">
 
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
@@ -483,6 +531,9 @@ const html = (
         </tr>
 
       </table>
+      <!--[if mso]>
+      </td></tr></table>
+      <![endif]-->
 
     </td>
   </tr>
